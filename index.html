@@ -34,6 +34,77 @@
             --color-black: #000000;
         }
 
+        /* --- 6. DARK MODE OVERRIDES --- */
+        [data-theme="dark"] {
+            /* Fondo Profundo (No negro absoluto para evitar fatiga) */
+            --color-cream-bg: #121212;
+    
+            /* Tarjetas: Un gris un poco más elevado */
+            --color-white: #1e1e1e;
+    
+            /* Textos: Invertimos a crema suave para lectura cómoda */
+            --color-olive-dark: #e6e2d3; /* Texto Principal */
+            --color-deep-olive: #b0b8a0; /* Subtítulos */
+    
+            /* Acentos: Ajustamos brillo para que resalten sobre oscuro */
+            --color-gold-brown: #d4b470; 
+            --color-sage-green: #9aa88e;
+            --color-grey-blue: #a0a0a0;
+            --color-light-grey: #333333; /* Bordes e inputs */
+    
+            /* Componentes Específicos */
+            --color-light-olive: #2c2c25; /* Tarjetas Highlight fondo */
+    
+            /* Nota: Mantenemos el negro del Nav o lo hacemos gris muy oscuro */
+            --color-black: #000000; 
+        }
+
+        /* Ajustes específicos para elementos en Modo Oscuro */
+        [data-theme="dark"] .app-header {
+            background-color: var(--color-white);
+            border-bottom: 1px solid #333; /* Borde sutil porque la sombra no se ve */
+            box-shadow: none;
+        }
+
+        [data-theme="dark"] .sidebar {
+            background-color: var(--color-white);
+            border-right: 1px solid #333;
+        }
+
+        [data-theme="dark"] .reading-item, 
+        [data-theme="dark"] .sidebar-item {
+            border-bottom-color: #333;
+        }
+
+        [data-theme="dark"] .book-header {
+            background-color: #181818;
+            color: var(--color-deep-olive);
+            border-bottom: 1px solid #333;
+        }
+
+        [data-theme="dark"] .reading-item.next-up {
+            background-color: #25241e; /* Resalte sutil */
+        }
+
+        /* Invertir inputs para que no sean bombillos blancos */
+        [data-theme="dark"] input, 
+        [data-theme="dark"] select, 
+        [data-theme="dark"] textarea {
+            background-color: #2a2a2a;
+            border-color: #444;
+            color: var(--color-olive-dark);
+        }
+
+        /* Corrección de Logo e Imágenes transparentes */
+        [data-theme="dark"] .app-logo {
+            /* Si tu logo es oscuro, esto lo vuelve blanco para que se vea */
+            filter: brightness(0) invert(1) opacity(0.8);
+        }
+
+        [data-theme="dark"] .calendar-day.active-filter {
+            background-color: #333;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -901,6 +972,90 @@
             }
         }
 
+        /* --- 7. REFINAMIENTOS DE MODO OSCURO (HOTFIX) --- */
+
+        /* 1. ARREGLO DEL CHECKBOX DE PUBLICADORES */
+        /* Sobrescribimos el estilo inline (background:#f0f8ff) usando !important */
+        [data-theme="dark"] #modal-publisher-group,
+        [data-theme="dark"] #publisher-check-container {
+            background-color: #2c2c25 !important; /* Oliva muy oscuro para mantener consistencia */
+            border-color: var(--color-gold-brown) !important;
+            border-style: solid !important;
+        }
+
+        /* Aseguramos que el texto y el label sean legibles */
+        [data-theme="dark"] #modal-publisher-group label, 
+        [data-theme="dark"] #publisher-check-container label {
+            color: #ece8e2 !important; /* Crema claro */
+            text-shadow: none;
+        }
+
+        /* 2. MEJORA DE TÍTULOS (Letras Gruesas) */
+        /* Los hacemos más brillantes para que destaquen sobre el fondo oscuro */
+        [data-theme="dark"] h1,
+        [data-theme="dark"] h2,
+        [data-theme="dark"] h3,
+        [data-theme="dark"] .calendar-title {
+            color: #ffffff !important; /* Blanco puro para máximo contraste */
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5); /* Sombra suave para dar volumen */
+        }
+
+        /* El texto de "Estado del Mes" y etiquetas pequeñas */
+        [data-theme="dark"] small {
+            color: #a0a0a0 !important; /* Gris medio, no tan oscuro */
+        }
+
+        /* 3. ARREGLO LISTA DE LECTURA (Ítems Futuros) */
+        /* El color #444 original no se ve. Lo cambiamos a un gris perla. */
+        [data-theme="dark"] .book-title {
+            color: #d1d1d1 !important; /* Gris claro legible */
+        }
+
+        /* El texto de los capítulos (ej: Caps. 4-7) */
+        [data-theme="dark"] .book-chapters {
+            color: #9aa88e !important; /* Verde salvia suave */
+        }
+
+        /* Ajuste visual para el ítem "Siguiente" (Next Up) en modo oscuro */
+        [data-theme="dark"] .reading-item.next-up {
+            background-color: #2a2a20 !important; /* Un poco más claro que el fondo base */
+            border-left: 4px solid var(--color-gold-brown);
+        }
+        [data-theme="dark"] .reading-item.next-up .book-title {
+            color: var(--color-gold-brown) !important; /* El título activo en dorado */
+        }
+
+        /* 4. CORRECCIÓN ÁREA DE NOTAS (Acordeón) */
+        /* El fondo blanco brillante se cambia por un tono oscuro "hundido" */
+        [data-theme="dark"] .reading-note-area {
+            background-color: #151515 !important; /* Un poco más oscuro que la tarjeta para dar profundidad */
+            border-top: 1px dashed #333 !important; /* Borde sutil */
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.2); /* Sombra interna para efecto de profundidad */
+        }
+
+        /* Ajustamos el botón "Guardar Nota" para que no vibre tanto */
+        [data-theme="dark"] .reading-note-area button {
+            background-color: var(--color-deep-olive) !important; /* Verde más sobrio */
+            color: #fff !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+        }
+
+        /* 5. SUAVIZADO DE INTERACCIÓN (Toque) */
+
+        /* Sobrescribimos el color de fondo al tocar un ítem en modo oscuro */
+        [data-theme="dark"] .reading-item:active,
+        [data-theme="dark"] .calendar-day:active,
+        [data-theme="dark"] .photo-card:active {
+            background-color: #2a2a2a !important; /* Gris oscuro sutil, no blanco brillante */
+            transition: background-color 0.1s ease; /* Transición rápida para suavizar el golpe */
+        }
+
+        /* Ajuste específico para cuando tocas el ítem que te "toca leer" (Next Up) */
+        /* Mantenemos el tono pero lo oscurecemos un poco al presionar */
+        [data-theme="dark"] .reading-item.next-up:active {
+            background-color: #1f1e1a !important; 
+        }
+
     </style>
 </head>
 <body>
@@ -927,6 +1082,14 @@
         <div class="sidebar-item" onclick="exportBackup()"><i class="fas fa-cloud-download-alt"></i> Backup / Guardar</div>
         <div class="sidebar-item" onclick="triggerRestore()"><i class="fas fa-cloud-upload-alt"></i> Restaurar Datos</div>
         <input type="file" id="restore-input" accept=".json" style="display: none;" onchange="handleRestoreFile(this)">
+        <div class="sidebar-item" style="display:flex; justify-content:space-between; align-items:center;">
+            <span><i class="fas fa-adjust"></i> Tema</span>
+            <select id="theme-selector" onchange="changeTheme(this.value)" style="padding:5px; border-radius:8px; border:1px solid var(--color-light-grey); background:var(--color-cream-bg); color:var(--color-olive-dark);">
+                <option value="system">Sistema</option>
+                <option value="light">Claro</option>
+                <option value="dark">Oscuro</option>
+            </select>
+        </div>
         <div class="sidebar-item"><i class="fas fa-question-circle"></i> Ayuda</div>
         <div class="sidebar-item" onclick="toggleSidebar()"><i class="fas fa-arrow-left"></i> Cerrar</div>
     </div>
@@ -1699,9 +1862,60 @@
             accumulatedSeconds: 0 
         };
 
+        /* --- THEME MANAGER --- */
+        // Clave para guardar preferencia (separada de appData para carga rápida)
+        const THEME_KEY = "preacher_theme_pref";
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem(THEME_KEY) || 'system';
+    
+            // Sincronizar el selector del sidebar
+            const selector = document.getElementById('theme-selector');
+            if(selector) selector.value = savedTheme;
+
+            applyTheme(savedTheme);
+        }
+
+        function changeTheme(mode) {
+            localStorage.setItem(THEME_KEY, mode);
+            applyTheme(mode);
+            triggerHaptic('click'); // Feedback táctil al cambiar
+        }
+
+        function applyTheme(mode) {
+            let isDark = false;
+
+            if (mode === 'system') {
+                // Detectar preferencia del dispositivo
+                isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            } else {
+                isDark = (mode === 'dark');
+            }
+
+            // Aplicar al DOM
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                // Cambiar color de la barra de estado del navegador (Mobile Chrome/Safari)
+                document.querySelector('meta[name="theme-color"]').setAttribute('content', '#121212');
+                // Actualizar avatar de Misael si es necesario (opcional)
+                // document.getElementById('misa-avatar').style.filter = "brightness(0.9)";
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                document.querySelector('meta[name="theme-color"]').setAttribute('content', '#59583b');
+            }
+        }
+
+        // Listener: Si el usuario tiene "Sistema" y su móvil cambia de hora (atardecer), la app cambia sola.
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (localStorage.getItem(THEME_KEY) === 'system') {
+                applyTheme('system');
+            }
+        });
+
         // Init App
         window.onload = () => {
             // Cargas previas...
+            initTheme();
             renderReadingList();
             renderCalendar();
             checkScheduleNotification();

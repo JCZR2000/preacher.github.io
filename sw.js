@@ -1,4 +1,4 @@
-const CACHE_NAME = 'preacher-v2-cache';
+const CACHE_NAME = 'preacher-v2.1-cache';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
