@@ -1,0 +1,2949 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Preacher</title>
+    <link rel="manifest" href="manifest.json">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#59583b"> <link rel="apple-touch-icon" href="logo.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- 1. SISTEMA DE DISEÑO --- */
+        :root {
+            /* Primarios */
+            --color-gold-brown: #8c754a;
+            --color-white: #ffffff;
+            --color-sage-green: #76846a;
+            --color-olive-dark: #59583b;
+            --color-grey-blue: #9dabab;
+
+            /* Secundarios */
+            --color-light-grey: #bac2ba;
+            --color-cream-bg: #ece8e2;  
+            --color-light-olive: #bcbfa0; 
+            --color-deep-olive: #6b7350;
+            --color-black: #000000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: var(--color-cream-bg);
+            color: var(--color-olive-dark);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Controlado por las vistas */
+        }
+
+        h1, h2, h3 {
+            font-family: 'League Spartan', sans-serif;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- UI COMPONENTS --- */
+        .app-header {
+            background-color: var(--color-cream-bg);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+            height: 70px;
+        }
+
+        .app-logo {
+            height: 150px;
+            object-fit: contain;
+        }
+
+        .menu-btn {
+            position: absolute;
+            left: 20px;
+            font-size: 1.2rem;
+            color: var(--color-olive-dark);
+            cursor: pointer;
+        }
+
+        /* Main Scrollable Area */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0; /* ELIMINADO: Ahora controlamos el relleno por vista */
+            padding-bottom: 90px; /* Mantenemos espacio para el footer */
+            position: relative;
+            background-color: var(--color-cream-bg); /* Fondo base */
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+            padding: 20px; /* Restauramos el relleno aquí */
+        }
+
+        /* EXCEPCIÓN: La vista de lectura NO tiene padding superior */
+        #view-reading.view-section {
+            padding-top: 0; 
+            padding-left: 0;
+            padding-right: 0;
+            /* Mantenemos padding-bottom para que no se corte el final */
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--color-white);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(89, 88, 59, 0.08);
+        }
+
+        .card.highlight {
+            background-color: var(--color-light-olive);
+            color: var(--color-olive-dark);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: var(--color-olive-dark);
+            color: var(--color-white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-family: 'League Spartan', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.1s;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 85px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background-color: var(--color-olive-dark);
+            color: var(--color-white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(89, 88, 59, 0.4);
+            z-index: 200;
+            cursor: pointer;
+        }
+
+        /* --- FOOTER NAV --- */
+        .app-nav {
+            background-color: var(--color-black);
+            height: 70px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 100;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+
+        .nav-item {
+            color: var(--color-grey-blue);
+            font-size: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--color-white);
+        }
+        
+        .nav-item span {
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* --- DASHBOARD SPECIFICS --- */
+        .stopwatch-container {
+            text-align: center;
+        }
+        
+        .timer-display {
+            font-family: 'League Spartan', sans-serif;
+            font-size: 3.5rem;
+            color: var(--color-olive-dark);
+            margin: 15px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--color-olive-dark);
+            background: transparent;
+            color: var(--color-olive-dark);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .control-btn.play {
+            background: var(--color-olive-dark);
+            color: var(--color-white);
+        }
+
+        .assistant-avatar-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .avatar-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--color-white);
+            object-fit: cover;
+            object-position: top;
+            background-color: var(--color-light-grey);
+        }
+
+        .progress-text h3 {
+            color: var(--color-deep-olive);
+            margin-bottom: 5px;
+        }
+
+        /* --- REPORT SPECIFICS --- */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-deep-olive);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--color-light-grey);
+            border-radius: 8px;
+            background: var(--color-white);
+            font-size: 1rem;
+            color: var(--color-olive-dark);
+        }
+
+        .ldc-badge {
+            background-color: var(--color-gold-brown);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+
+        /* --- READING LIST SPECIFICS --- */
+        /* --- MEJORAS FASE 2: LISTA DE LECTURA --- */
+
+        /* Barra de progreso superior en la vista de lectura */
+        .reading-progress-container {
+            background-color: var(--color-white);
+    
+            /* Espaciado interno generoso */
+            padding: 20px 25px 30px 25px; 
+    
+            /* Forma de "Lengüeta" o "Tab" */
+            border-radius: 0 0 35px 35px; /* Solo curvas abajo */
+    
+            /* Sombra suave para dar profundidad sobre el fondo crema */
+            box-shadow: 0 10px 40px -10px rgba(89, 88, 59, 0.15);
+    
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            margin-bottom: 25px; /* Empuja la lista de libros hacia abajo */
+        }
+
+        .reading-progress-bar {
+            height: 10px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .reading-progress-fill {
+            height: 100%;
+            /* Gradiente Dorado Premium */
+            background: linear-gradient(90deg, #8c754a 0%, #b8a06e 100%);
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* Tarjeta de la Lista */
+        .card-reading-list {
+            margin: 0 20px; /* Añadimos margen lateral aquí (20px) ya que quitamos el global */
+            background: var(--color-white);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.03);
+            border: 1px solid rgba(255,255,255,0.8);
+        }
+
+        /* Encabezados de Libros (Génesis, Éxodo...) */
+        .book-header {
+            background-color: #f8f7f4; /* Un tono crema muy suave */
+            color: var(--color-deep-olive);
+            padding: 12px 20px;
+            font-family: 'League Spartan', sans-serif;
+            font-weight: 800;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* Ajustes a los ítems */
+        .reading-item {
+            background: var(--color-white);
+            border-bottom: 1px solid #f4f4f4;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .reading-item:active {
+            background-color: #fafafa;
+            transform: scale(0.98);
+        }
+
+        /* Resaltar el ítem activo/siguiente */
+        .reading-item.next-up {
+            background-color: #fdfcf5; /* Crema muy pálido */
+            border-left: 6px solid var(--color-gold-brown);
+        }
+
+        .reading-item.next-up .book-title {
+            color: var(--color-gold-brown);
+            font-weight: 800;
+        }
+
+        .book-title {
+            font-weight: 700;
+            font-size: 1.05rem; /* Texto un poco más grande */
+            color: #444;
+            margin-bottom: 2px;
+        }
+
+        .reading-item:last-child {
+            border-bottom: none;
+        }
+
+        .reading-item.completed {
+            opacity: 0.6;
+            background-color: #f9f9f9;
+        }
+
+        .reading-item.completed .book-title {
+            text-decoration: line-through;
+        }
+
+        .reading-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .icon-indicator {
+            font-size: 1.2rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .israel-history { color: #d9534f; } /* Rombo Rojo aproximado */
+        .christian-history { color: #0275d8; } /* Punto Azul */
+
+        .book-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .book-chapters {
+            font-size: 0.85rem;
+            color: var(--color-grey-blue);
+        }
+
+        .check-circle {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: transparent;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efecto rebote */
+        }
+
+        .reading-item.completed .check-circle {
+            background-color: var(--color-sage-green);
+            border-color: var(--color-sage-green);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        /* Accordion Note */
+        .reading-note-area {
+            display: none;
+            padding: 10px 15px;
+            background-color: #fcfcfc;
+            border-top: 1px dashed var(--color-light-grey);
+        }
+        
+        .reading-note-area textarea {
+            width: 100%;
+            border: 1px solid var(--color-light-grey);
+            border-radius: 6px;
+            padding: 8px;
+            font-family: 'Open Sans', sans-serif;
+            resize: none;
+        }
+
+        .reading-note-area button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            background-color: var(--color-sage-green);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        /* --- CALENDAR/PHOTOS --- */
+        .photo-upload-area {
+            border: 2px dashed var(--color-light-grey);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            color: var(--color-grey-blue);
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .photo-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 1; /* Cuadrado perfecto */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .photo-card:active {
+            transform: scale(0.95);
+        }
+
+        .photo-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Botón de borrar (Papelera) */
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #d9534f; /* Rojo alerta */
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+
+        .photo-date-badge {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            color: white;
+            font-size: 0.7rem;
+            padding: 15px 5px 5px 5px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Estado de carga */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--color-olive-dark);
+            font-size: 0.8rem;
+            z-index: 10;
+        }
+
+        /* --- MODAL --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 500;
+            align-items: flex-end; /* Mobile style sheet */
+            justify-content: center; /* Centrado para pantallas grandes también */
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--color-white);
+            width: 100%;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 25px;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* Confetti Overlay */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            display: none;
+        }
+
+        .mary-celebration {
+            position: fixed;
+            bottom: 80px; /* Posición base */
+            left: 50%;
+    
+            /* 1. La empujamos más abajo (300px) y la hacemos transparente */
+            transform: translateX(-50%) translateY(300px); 
+            opacity: 0;
+    
+            width: 150px;
+    
+            /* 2. Z-Index MENOR que la Nav (que es 100). Ahora saldrá "detrás" de la barra */
+            z-index: 90; 
+    
+            /* 3. Evitamos que bloquee clics cuando no se ve */
+            pointer-events: none;
+    
+            /* Añadimos transición de opacidad */
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+
+        .mary-celebration.active {
+            /* Al activarse: sube a su sitio, se hace visible y clickable */
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100%;
+            background: var(--color-white);
+            z-index: 400;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .sidebar.active { transform: translateX(0); }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .sidebar-item {
+            padding: 15px 0;
+            border-bottom: 1px solid var(--color-cream-bg);
+            font-weight: 600;
+        }
+
+        /* --- UI EXTRA: SPINNER DE CARGA --- */
+
+        .full-screen-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 2000; /* Por encima de TODO */
+            display: none; /* Oculto por defecto */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--color-light-grey);
+            border-top: 5px solid var(--color-gold-brown); /* Color principal girando */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loader-text {
+            font-family: 'League Spartan', sans-serif;
+            font-weight: 700;
+            color: var(--color-olive-dark);
+            font-size: 1.2rem;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* --- CALENDARIO & AGENDA --- */
+
+        .calendar-wrapper {
+            background: var(--color-white);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(89, 88, 59, 0.08);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-title {
+            font-family: 'League Spartan', sans-serif;
+            font-weight: 700;
+            color: var(--color-olive-dark);
+            font-size: 1.1rem;
+            text-transform: capitalize;
+        }
+
+        .calendar-nav-btn {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            color: var(--color-gold-brown);
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+
+        .weekday-label {
+            font-size: 0.75rem;
+            color: var(--color-grey-blue);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .calendar-day.empty { pointer-events: none; }
+
+        .calendar-day:active { background-color: #f0f0f0; }
+
+        .calendar-day.today {
+            border-color: var(--color-gold-brown);
+            font-weight: 700;
+            color: var(--color-gold-brown);
+        }
+
+        .calendar-day.has-event {
+            color: white; /* El background se pone por JS */
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .calendar-day.selected-filter {
+            box-shadow: 0 0 0 2px var(--color-olive-dark);
+        }
+
+        /* Indicador de fotos existentes en esa fecha (punto pequeño abajo) */
+        .photo-dot {
+            position: absolute;
+            bottom: 3px;
+            width: 4px;
+            height: 4px;
+            background-color: var(--color-grey-blue);
+            border-radius: 50%;
+        }
+
+        .has-event .photo-dot { background-color: white; }
+
+        /* Selección de Colores en Modal */
+        .color-options {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .color-option {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .color-option.selected {
+            transform: scale(1.2);
+            border-color: var(--color-olive-dark);
+        }
+
+        /* NOTIFICACIÓN ROJA (Footer) */
+        .nav-item { position: relative; } /* Para posicionar el punto */
+
+        .notification-dot {
+            position: absolute;
+            top: 5px;
+            right: 20px; /* Ajustar según el ancho del icono */
+            width: 10px;
+            height: 10px;
+            background-color: #d9534f;
+            border: 2px solid var(--color-black); /* Borde para separar del fondo oscuro */
+            border-radius: 50%;
+            display: none; /* Oculto por defecto */
+            z-index: 10;
+        }
+
+        .notification-dot.active { display: block; }
+
+        /* --- 5. ANIMACIONES VIEW TRANSITIONS API --- */
+
+        /* Duración y curva suave para todas las transiciones */
+        ::view-transition-group(root) {
+            animation-duration: 0.4s;
+            animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1); /* Curva 'Standard easing' de Material Design */
+        }
+
+        /* --- ANIMACIÓN HACIA ADELANTE (Forward) --- */
+        /* La vista vieja sale hacia la izquierda */
+        :root[data-transition="forward"] ::view-transition-old(root) {
+            animation-name: slideOutLeft;
+        }
+        /* La vista nueva entra desde la derecha */
+        :root[data-transition="forward"] ::view-transition-new(root) {
+            animation-name: slideInRight;
+            mix-blend-mode: normal; /* Evita mezclas de color raras */
+        }
+
+        /* --- ANIMACIÓN HACIA ATRÁS (Backward) --- */
+        /* La vista vieja sale hacia la derecha */
+        :root[data-transition="backward"] ::view-transition-old(root) {
+            animation-name: slideOutRight;
+            z-index: 1; /* Asegurar orden de apilamiento */
+        }
+        /* La vista nueva entra desde la izquierda */
+        :root[data-transition="backward"] ::view-transition-new(root) {
+            animation-name: slideInLeft;
+            mix-blend-mode: normal;
+            z-index: 2;
+        }
+
+        /* KEYFRAMES */
+        @keyframes slideOutLeft {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(-20%); opacity: 0; } /* Parallax sutil: sale más lento */
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; } /* Se desliza completa hacia afuera */
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-20%); opacity: 0; } /* Parallax sutil: entra desde el fondo */
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Fallback para navegadores que no soportan la API: no romper nada */
+        @supports not (view-transition-name: none) {
+            .view-section {
+                animation: none !important; /* Desactiva la animación fade-in antigua para evitar conflictos */
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <img src="mary.png" alt="Mary" class="mary-celebration" id="mary-pop">
+
+    <header class="app-header">
+        <div class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+        <img src="logo.png" alt="Preacher" class="app-logo">
+    </header>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header" onclick="openProfileModal()" style="cursor: pointer;">
+            <img src="misa.png" id="sidebar-avatar-img" style="width: 50px; height: 50px; border-radius: 50%; object-fit:cover; border: 2px solid var(--color-gold-brown);">
+            <div>
+                <div id="sidebar-username" style="font-weight:700; color:var(--color-olive-dark);">Usuario</div>
+                <small id="sidebar-role" style="color:var(--color-gold-brown)">Publicador Regular</small>
+                <div style="font-size:0.7rem; color:#888; margin-top:2px;"><i class="fas fa-pen"></i> Editar</div>
+            </div>
+        </div>
+        <div class="sidebar-item"><i class="fas fa-cog"></i> Configuración</div>
+        <div class="sidebar-item" onclick="exportBackup()"><i class="fas fa-cloud-download-alt"></i> Backup / Guardar</div>
+        <div class="sidebar-item" onclick="triggerRestore()"><i class="fas fa-cloud-upload-alt"></i> Restaurar Datos</div>
+        <input type="file" id="restore-input" accept=".json" style="display: none;" onchange="handleRestoreFile(this)">
+        <div class="sidebar-item"><i class="fas fa-question-circle"></i> Ayuda</div>
+        <div class="sidebar-item" onclick="toggleSidebar()"><i class="fas fa-arrow-left"></i> Cerrar</div>
+    </div>
+    <div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); z-index:350;"></div>
+
+    <main class="main-content">
+
+        <section id="view-home" class="view-section active">
+            
+            <div class="card highlight stopwatch-container">
+                <h3>Cronómetro</h3>
+                <div class="timer-display" id="timer-display">00:00:00</div>
+                <div class="timer-controls">
+                    <button class="control-btn" id="reset-btn" onclick="resetTimer()"><i class="fas fa-undo"></i></button>
+                    <button class="control-btn play" id="play-btn" onclick="toggleTimer()"><i class="fas fa-play"></i></button>
+                    <button class="control-btn" id="stop-btn" onclick="stopAndSaveTimer()"><i class="fas fa-stop"></i></button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><i class="fas fa-book-open" style="color:var(--color-gold-brown)"></i> Lectura Sugerida</h3>
+                <div id="next-reading-card" style="margin-top: 10px;">
+                    <p>Cargando lectura...</p>
+                </div>
+                <button class="btn-primary" style="margin-top:15px; background-color: var(--color-sage-green);" onclick="markNextReadingDone()">Marcar como Leído</button>
+            </div>
+
+            <div class="card assistant-avatar-container">
+                <img src="misa.png" alt="Asistente" class="avatar-img" id="misa-avatar">
+                <div class="progress-text">
+                    <h3>Progreso Mensual</h3>
+                    <div style="font-size: 2rem; font-family: 'League Spartan'; color: var(--color-olive-dark);">
+                        <span id="home-hours">0</span>h
+                    </div>
+                    <small id="misa-msg">¡Vas bien! Sigue así.</small>
+                </div>
+            </div>
+
+        </section>
+
+        <section id="view-report" class="view-section">
+            <h2 style="margin-bottom: 15px;">Informe del Mes</h2>
+            
+            <div class="card">
+                <div class="stat-grid">
+                    <div>
+                        <small>Meta Mensual</small>
+                        <h3 style="color: var(--color-gold-brown)">50 hrs</h3>
+                    </div>
+                    <div>
+                        <small>Actual</small>
+                        <h3 id="report-total-hours">0 hrs</h3>
+                    </div>
+                </div>
+                <div style="background: #eee; height: 10px; border-radius: 5px; margin-top: 10px; overflow: hidden;">
+                    <div id="progress-bar-fill" style="width: 0%; height: 100%; background: var(--color-olive-dark); transition: width 0.5s;"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Detalles</h3>
+                <form id="report-form">
+                    <div class="input-group">
+                        <label>Horas Predicación</label>
+                        <input type="number" id="input-hours" step="0.1" onchange="updateStats()">
+                    </div>
+                    <div class="input-group">
+                        <label>Horas LDC <span class="ldc-badge">No suma a meta</span></label>
+                        <input type="number" id="input-ldc" step="0.1" onchange="updateStats()">
+                    </div>
+                    <div class="stat-grid">
+                        <div class="input-group">
+                            <label>Revisitas</label>
+                            <input type="number" id="input-revisitas" onchange="updateStats()">
+                        </div>
+                        <div class="input-group">
+                            <label>Cursos</label>
+                            <input type="number" id="input-cursos" onchange="updateStats()">
+                        </div>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="input-group">
+                            <label>Publicaciones</label>
+                            <input type="number" id="input-pubs" onchange="updateStats()">
+                        </div>
+                        <div class="input-group">
+                            <label>Videos</label>
+                            <input type="number" id="input-videos" onchange="updateStats()">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card highlight">
+                 <h3>Proyección Anual</h3>
+                 <p>Acumulado: <strong id="annual-total">0</strong> / 600 hrs</p>
+            </div>
+        </section>
+
+        <section id="view-reading" class="view-section">
+    
+            <div class="reading-progress-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="font-family:'League Spartan'; font-weight:700; font-size:1.1rem; color:var(--color-olive-dark);">
+                        Progreso Bíblico
+                    </span>
+                    <span id="reading-percent-text" style="font-weight:700; color:var(--color-gold-brown);">0%</span>
+                </div>
+                <div class="reading-progress-bar">
+                    <div class="reading-progress-fill" id="reading-progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="card-reading-list">
+                <div id="reading-list-container">
+                    </div>
+            </div>
+
+        </section>
+
+        <section id="view-calendar" class="view-section">
+            <h2 style="margin-bottom: 15px;">Agenda y Recuerdos</h2>
+    
+            <div class="calendar-wrapper">
+                <div class="calendar-header">
+                    <button class="calendar-nav-btn" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <div class="calendar-title" id="calendar-month-year">Enero 2026</div>
+                    <button class="calendar-nav-btn" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="calendar-grid" id="calendar-grid">
+                    </div>
+                <button id="clear-filter-btn" style="display:none; width:100%; margin-top:10px; font-size:0.8rem; background:#eee; border:none; padding:8px; border-radius:8px;" onclick="clearDateFilter()">
+                    Ver todas las fotos
+                </button>
+            </div>
+
+            <div class="card">
+                <h3>Subir Fotos (Max 2/día)</h3>
+                <input type="file" id="photo-input" accept="image/*" style="display: none;" onchange="handlePhotoUpload(this)">
+                <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+                    <i class="fas fa-camera" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                    <p>Toca para agregar foto</p>
+                </div>
+
+                <div class="photo-grid" id="photo-gallery"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="fab" onclick="openAddModal()">
+        <i class="fas fa-plus"></i>
+    </div>
+
+    <div class="modal" id="add-modal">
+        <div class="modal-content">
+            <h3>Registro Rápido</h3>
+        
+            <div class="input-group" id="modal-hours-group">
+                <label>Horas a sumar hoy</label>
+                <input type="number" id="quick-add-hours" placeholder="Ej. 2.5" step="0.1">
+            </div>
+
+            <div class="input-group" id="modal-publisher-group" style="display:none; background:#f0f8ff; padding:15px; border-radius:10px; border:1px dashed var(--color-grey-blue);">
+                <label style="cursor:pointer; display:flex; align-items:center; gap:10px; font-weight:bold; color:var(--color-olive-dark);">
+                    <input type="checkbox" id="quick-participated" style="width:20px; height:20px;">
+                    <span>¿Predicaste hoy? (Marcar actividad)</span>
+                </label>
+            </div>
+
+            <div class="input-group" style="margin-top:15px;">
+                <label>Total Cursos Bíblicos (Actualizar)</label>
+                <input type="number" id="quick-courses" placeholder="Cant. total (Ej. 3)">
+            </div>
+
+            <button class="btn-primary" onclick="quickAdd()">Guardar</button>
+            <button style="background:transparent; border:none; width:100%; padding:10px; margin-top:5px; color:var(--color-grey-blue);" onclick="closeAddModal()">Cancelar</button>
+        </div>
+    </div>
+
+    <div class="modal" id="profile-modal">
+        <div class="modal-content">
+            <h3>Editar Perfil</h3>
+        
+            <div style="text-align:center; margin-bottom:20px;">
+                <div style="position:relative; display:inline-block;">
+                    <img src="misa.png" id="profile-preview-img" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid var(--color-gold-brown);">
+                    <div onclick="document.getElementById('avatar-upload').click()" style="position:absolute; bottom:0; right:0; background:var(--color-olive-dark); color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                        <i class="fas fa-camera" style="font-size:0.8rem;"></i>
+                    </div>
+                </div>
+                <input type="file" id="avatar-upload" accept="image/*" style="display:none;" onchange="handleAvatarPreview(this)">
+            </div>
+
+            <div class="input-group">
+                <label>Nombre</label>
+                <input type="text" id="profile-name" placeholder="Tu nombre">
+            </div>
+
+            <div class="input-group">
+                <label>Privilegio / Rol</label>
+                <select id="profile-role" onchange="toggleProfileOptions()" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--color-light-grey); background:white;">
+                    <option value="regular">Precursor Regular (50h)</option>
+                    <option value="auxiliar">Precursor Auxiliar (30h)</option>
+                    <option value="publisher">Publicador</option>
+                </select>
+            </div>
+
+            <div id="aux-options" style="display:none; background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px dashed var(--color-gold-brown);">
+                <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                    <input type="checkbox" id="profile-co-visit" style="width:auto;">
+                    <span style="font-size:0.9rem;">Tengo visita del Super. (Meta 15h)</span>
+                </label>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn-primary" onclick="saveProfile()">Guardar Cambios</button>
+                <button style="background:transparent; border:1px solid var(--color-grey-blue); border-radius:12px; padding:12px; color:var(--color-grey-blue); font-weight:600; cursor:pointer;" onclick="closeProfileModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="app-nav">
+        <div class="nav-item active" onclick="switchView('home', this)">
+            <i class="fas fa-home"></i>
+            <span>Inicio</span>
+        </div>
+        <div class="nav-item" onclick="switchView('report', this)">
+            <i class="fas fa-chart-pie"></i>
+            <span>Informe</span>
+        </div>
+        <div class="nav-item" onclick="switchView('reading', this)">
+            <i class="fas fa-book"></i>
+            <span>Lectura</span>
+        </div>
+        <div class="nav-item" onclick="switchView('calendar', this)" id="nav-calendar-btn">
+            <div class="notification-dot" id="calendar-notif"></div> <i class="fas fa-calendar-alt"></i>
+            <span>Fotos</span>
+        </div>
+    </nav>
+
+    <div id="restore-loader" class="full-screen-loader">
+        <div class="spinner"></div>
+        <div class="loader-text">Restaurando Datos...</div>
+    </div>
+
+    <div class="modal" id="schedule-modal">
+        <div class="modal-content">
+            <h3 id="schedule-date-title">Agendar Salida</h3>
+            <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">Planifica tu servicio para este día.</p>
+
+            <div class="input-group">
+                <label>Hora de Salida</label>
+                <input type="time" id="schedule-time" style="font-size:1.2rem; padding:10px;">
+            </div>
+
+            <div class="input-group">
+                <label>Color en Calendario</label>
+                <div class="color-options">
+                    <div class="color-option" style="background:#8c754a" onclick="selectColor(this, '#8c754a')"></div> <div class="color-option" style="background:#76846a" onclick="selectColor(this, '#76846a')"></div> <div class="color-option" style="background:#d9534f" onclick="selectColor(this, '#d9534f')"></div> <div class="color-option" style="background:#5bc0de" onclick="selectColor(this, '#5bc0de')"></div> <div class="color-option" style="background:#f0ad4e" onclick="selectColor(this, '#f0ad4e')"></div> </div>
+                <input type="hidden" id="selected-color-input" value="#8c754a">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn-primary" onclick="saveSchedule()">Agendar</button>
+                <button style="background:transparent; border:1px solid var(--color-grey-blue); border-radius:12px; padding:12px; color:var(--color-grey-blue); font-weight:600; cursor:pointer; width:100%" onclick="closeScheduleModal()">Regresar</button>
+            </div>
+        
+            <button onclick="deleteSchedule()" style="width:100%; margin-top:15px; color:#d9534f; background:none; border:none; text-decoration:underline;">Borrar Evento</button>
+        </div>
+    </div>
+
+
+    <script>
+        // No modificar este Array por instrucción estricta
+        const bibleReadingPlan = [
+            // --- SECCIÓN: ESCRITOS DE MOISÉS ---
+            { id: 1, section: "Escritos de Moisés", book: "Génesis", chapters: "1-3", category: "standard" },
+            { id: 2, section: "Escritos de Moisés", book: "Génesis", chapters: "4-7", category: "standard" },
+            { id: 3, section: "Escritos de Moisés", book: "Génesis", chapters: "8-11", category: "standard" },
+            { id: 4, section: "Escritos de Moisés", book: "Génesis", chapters: "12-15", category: "israel_history" }, // ◆
+            { id: 5, section: "Escritos de Moisés", book: "Génesis", chapters: "16-18", category: "israel_history" }, // ◆
+            { id: 6, section: "Escritos de Moisés", book: "Génesis", chapters: "19-22", category: "israel_history" }, // ◆
+            { id: 7, section: "Escritos de Moisés", book: "Génesis", chapters: "23, 24", category: "israel_history" }, // ◆
+            { id: 8, section: "Escritos de Moisés", book: "Génesis", chapters: "25-27", category: "standard" },
+            { id: 9, section: "Escritos de Moisés", book: "Génesis", chapters: "28-30", category: "israel_history" }, // ◆
+            { id: 10, section: "Escritos de Moisés", book: "Génesis", chapters: "31, 32", category: "standard" },
+            { id: 11, section: "Escritos de Moisés", book: "Génesis", chapters: "33, 34", category: "standard" },
+            { id: 12, section: "Escritos de Moisés", book: "Génesis", chapters: "35-37", category: "israel_history" }, // ◆
+            { id: 13, section: "Escritos de Moisés", book: "Génesis", chapters: "38-40", category: "israel_history" }, // ◆
+            { id: 14, section: "Escritos de Moisés", book: "Génesis", chapters: "41, 42", category: "standard" },
+            { id: 15, section: "Escritos de Moisés", book: "Génesis", chapters: "43-45", category: "israel_history" }, // ◆
+            { id: 16, section: "Escritos de Moisés", book: "Génesis", chapters: "46-48", category: "israel_history" }, // ◆
+            { id: 17, section: "Escritos de Moisés", book: "Génesis", chapters: "49, 50", category: "israel_history" }, // ◆
+            
+            { id: 18, section: "Escritos de Moisés", book: "Éxodo", chapters: "1-4", category: "israel_history" }, // ◆
+            { id: 19, section: "Escritos de Moisés", book: "Éxodo", chapters: "5-7", category: "israel_history" }, // ◆
+            { id: 20, section: "Escritos de Moisés", book: "Éxodo", chapters: "8-10", category: "israel_history" }, // ◆
+            { id: 21, section: "Escritos de Moisés", book: "Éxodo", chapters: "11-13", category: "israel_history" }, // ◆
+            { id: 22, section: "Escritos de Moisés", book: "Éxodo", chapters: "14, 15", category: "israel_history" }, // ◆
+            { id: 23, section: "Escritos de Moisés", book: "Éxodo", chapters: "16-18", category: "standard" }, 
+            { id: 24, section: "Escritos de Moisés", book: "Éxodo", chapters: "19-21", category: "standard" },
+            { id: 25, section: "Escritos de Moisés", book: "Éxodo", chapters: "22-25", category: "standard" }, 
+            { id: 26, section: "Escritos de Moisés", book: "Éxodo", chapters: "26-28", category: "standard" },
+            { id: 27, section: "Escritos de Moisés", book: "Éxodo", chapters: "29, 30", category: "standard" },
+            { id: 28, section: "Escritos de Moisés", book: "Éxodo", chapters: "31-33", category: "standard" },
+            { id: 29, section: "Escritos de Moisés", book: "Éxodo", chapters: "34, 35", category: "israel_history" }, // ◆ 
+            { id: 30, section: "Escritos de Moisés", book: "Éxodo", chapters: "36-38", category: "standard" },
+            { id: 31, section: "Escritos de Moisés", book: "Éxodo", chapters: "39, 40", category: "standard" },
+
+            { id: 32, section: "Escritos de Moisés", book: "Levítico", chapters: "1-4", category: "standard" },
+            { id: 33, section: "Escritos de Moisés", book: "Levítico", chapters: "5-7", category: "standard" },
+            { id: 34, section: "Escritos de Moisés", book: "Levítico", chapters: "8-10", category: "israel_history" }, // ◆
+            { id: 35, section: "Escritos de Moisés", book: "Levítico", chapters: "11-13", category: "standard" },
+            { id: 36, section: "Escritos de Moisés", book: "Levítico", chapters: "14, 15", category: "standard" },
+            { id: 37, section: "Escritos de Moisés", book: "Levítico", chapters: "16-18", category: "standard" },
+            { id: 38, section: "Escritos de Moisés", book: "Levítico", chapters: "19-21", category: "standard" },
+            { id: 39, section: "Escritos de Moisés", book: "Levítico", chapters: "22, 23", category: "standard" },
+            { id: 40, section: "Escritos de Moisés", book: "Levítico", chapters: "24, 25", category: "standard" },
+            { id: 41, section: "Escritos de Moisés", book: "Levítico", chapters: "26, 27", category: "standard" },
+
+            { id: 42, section: "Escritos de Moisés", book: "Números", chapters: "1-3", category: "standard" },
+            { id: 43, section: "Escritos de Moisés", book: "Números", chapters: "4-6", category: "standard" },
+            { id: 44, section: "Escritos de Moisés", book: "Números", chapters: "7-9", category: "standard" },
+            { id: 45, section: "Escritos de Moisés", book: "Números", chapters: "10-12", category: "israel_history" }, // ◆
+            { id: 46, section: "Escritos de Moisés", book: "Números", chapters: "13-15", category: "israel_history" }, // ◆
+            { id: 47, section: "Escritos de Moisés", book: "Números", chapters: "16-18", category: "israel_history" }, // ◆
+            { id: 48, section: "Escritos de Moisés", book: "Números", chapters: "19-21", category: "israel_history" }, // ◆
+            { id: 49, section: "Escritos de Moisés", book: "Números", chapters: "22-24", category: "israel_history" }, // ◆
+            { id: 50, section: "Escritos de Moisés", book: "Números", chapters: "25-27", category: "israel_history" }, // ◆
+            { id: 51, section: "Escritos de Moisés", book: "Números", chapters: "28-30", category: "standard" },
+            { id: 52, section: "Escritos de Moisés", book: "Números", chapters: "31, 32", category: "standard" },
+            { id: 53, section: "Escritos de Moisés", book: "Números", chapters: "33-36", category: "israel_history" }, // ◆
+
+            { id: 54, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "1, 2", category: "israel_history" }, // ◆ 
+            { id: 55, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "3, 4", category: "standard" },
+            { id: 56, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "5-7", category: "standard" },
+            { id: 57, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "8-10", category: "standard" },
+            { id: 58, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "11-13", category: "standard" },
+            { id: 59, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "14-16", category: "standard" },
+            { id: 60, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "17-19", category: "israel_history" }, // ◆
+            { id: 61, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "20-22", category: "standard" },
+            { id: 62, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "23-26", category: "standard" },
+            { id: 63, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "27, 28", category: "standard" },
+            { id: 64, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "29-31", category: "israel_history" }, // ◆
+            { id: 65, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "32", category: "standard" }, 
+            { id: 66, section: "Escritos de Moisés", book: "Deuteronomio", chapters: "33, 34", category: "israel_history" }, // ◆
+
+            // --- SECCIÓN: ENTRADA DE ISRAEL EN LA TIERRA PROMETIDA ---
+            { id: 67, section: "Entrada de Israel", book: "Josué", chapters: "1-4", category: "israel_history" }, // ◆
+            { id: 68, section: "Entrada de Israel", book: "Josué", chapters: "5-7", category: "israel_history" }, // ◆
+            { id: 69, section: "Entrada de Israel", book: "Josué", chapters: "8, 9", category: "israel_history" }, // ◆
+            { id: 70, section: "Entrada de Israel", book: "Josué", chapters: "10-12", category: "israel_history" }, // ◆
+            { id: 71, section: "Entrada de Israel", book: "Josué", chapters: "13-15", category: "israel_history" }, // ◆ 
+            { id: 72, section: "Entrada de Israel", book: "Josué", chapters: "16-18", category: "israel_history" }, // ◆ 
+            { id: 73, section: "Entrada de Israel", book: "Josué", chapters: "19-21", category: "israel_history" }, // ◆ 
+            { id: 74, section: "Entrada de Israel", book: "Josué", chapters: "22-24", category: "israel_history" }, // ◆ 
+            
+            { id: 75, section: "Entrada de Israel", book: "Jueces", chapters: "1, 2", category: "israel_history" }, // ◆
+            { id: 76, section: "Entrada de Israel", book: "Jueces", chapters: "3-5", category: "israel_history" }, // ◆
+            { id: 77, section: "Entrada de Israel", book: "Jueces", chapters: "6, 7", category: "israel_history" }, // ◆
+            { id: 78, section: "Entrada de Israel", book: "Jueces", chapters: "8, 9", category: "israel_history" }, // ◆
+            { id: 79, section: "Entrada de Israel", book: "Jueces", chapters: "10, 11", category: "israel_history" }, // ◆
+            { id: 80, section: "Entrada de Israel", book: "Jueces", chapters: "12, 13", category: "israel_history" }, // ◆
+            { id: 81, section: "Entrada de Israel", book: "Jueces", chapters: "14-16", category: "israel_history" }, // ◆
+            { id: 82, section: "Entrada de Israel", book: "Jueces", chapters: "17-19", category: "israel_history" }, // ◆
+            { id: 83, section: "Entrada de Israel", book: "Jueces", chapters: "20, 21", category: "israel_history" }, // ◆
+
+            { id: 84, section: "Entrada de Israel", book: "Rut", chapters: "1-4", category: "standard" },
+
+            // --- SECCIÓN: ÉPOCA DE LOS REYES ISRAELITAS ---
+            { id: 85, section: "Época de los Reyes", book: "1 Samuel", chapters: "1, 2", category: "israel_history" }, // ◆
+            { id: 86, section: "Época de los Reyes", book: "1 Samuel", chapters: "3-6", category: "israel_history" }, // ◆
+            { id: 87, section: "Época de los Reyes", book: "1 Samuel", chapters: "7-9", category: "israel_history" }, // ◆
+            { id: 88, section: "Época de los Reyes", book: "1 Samuel", chapters: "10-12", category: "israel_history" }, // ◆
+            { id: 89, section: "Época de los Reyes", book: "1 Samuel", chapters: "13, 14", category: "israel_history" }, // ◆
+            { id: 90, section: "Época de los Reyes", book: "1 Samuel", chapters: "15, 16", category: "israel_history" }, // ◆
+            { id: 91, section: "Época de los Reyes", book: "1 Samuel", chapters: "17, 18", category: "israel_history" }, // ◆
+            { id: 92, section: "Época de los Reyes", book: "1 Samuel", chapters: "19-21", category: "israel_history" }, // ◆
+            { id: 93, section: "Época de los Reyes", book: "1 Samuel", chapters: "22-24", category: "israel_history" }, // ◆
+            { id: 94, section: "Época de los Reyes", book: "1 Samuel", chapters: "25-27", category: "israel_history" }, // ◆
+            { id: 95, section: "Época de los Reyes", book: "1 Samuel", chapters: "28-31", category: "israel_history" }, // ◆
+
+            { id: 96, section: "Época de los Reyes", book: "2 Samuel", chapters: "1, 2", category: "israel_history" }, // ◆
+            { id: 97, section: "Época de los Reyes", book: "2 Samuel", chapters: "3-5", category: "israel_history" }, // ◆
+            { id: 98, section: "Época de los Reyes", book: "2 Samuel", chapters: "6-8", category: "israel_history" }, // ◆
+            { id: 99, section: "Época de los Reyes", book: "2 Samuel", chapters: "9-12", category: "israel_history" }, // ◆
+            { id: 100, section: "Época de los Reyes", book: "2 Samuel", chapters: "13, 14", category: "israel_history" }, // ◆
+            { id: 101, section: "Época de los Reyes", book: "2 Samuel", chapters: "15, 16", category: "israel_history" }, // ◆
+            { id: 102, section: "Época de los Reyes", book: "2 Samuel", chapters: "17, 18", category: "israel_history" }, // ◆
+            { id: 103, section: "Época de los Reyes", book: "2 Samuel", chapters: "19, 20", category: "israel_history" }, // ◆
+            { id: 104, section: "Época de los Reyes", book: "2 Samuel", chapters: "21, 22", category: "standard" },
+            { id: 105, section: "Época de los Reyes", book: "2 Samuel", chapters: "23, 24", category: "standard" },
+
+            { id: 106, section: "Época de los Reyes", book: "1 Reyes", chapters: "1, 2", category: "israel_history" }, // ◆
+            { id: 107, section: "Época de los Reyes", book: "1 Reyes", chapters: "3-5", category: "standard" },
+            { id: 108, section: "Época de los Reyes", book: "1 Reyes", chapters: "6, 7", category: "standard" },
+            { id: 109, section: "Época de los Reyes", book: "1 Reyes", chapters: "8", category: "standard" },
+            { id: 110, section: "Época de los Reyes", book: "1 Reyes", chapters: "9, 10", category: "standard" }, // ◆ 
+            { id: 111, section: "Época de los Reyes", book: "1 Reyes", chapters: "11, 12", category: "israel_history" }, // ◆
+            { id: 112, section: "Época de los Reyes", book: "1 Reyes", chapters: "13, 14", category: "israel_history" }, // ◆
+            { id: 113, section: "Época de los Reyes", book: "1 Reyes", chapters: "15-17", category: "israel_history" }, // ◆
+            { id: 114, section: "Época de los Reyes", book: "1 Reyes", chapters: "18, 19", category: "israel_history" }, // ◆
+            { id: 115, section: "Época de los Reyes", book: "1 Reyes", chapters: "20, 21", category: "israel_history" }, // ◆
+            { id: 116, section: "Época de los Reyes", book: "1 Reyes", chapters: "22", category: "israel_history" }, // ◆
+
+            { id: 117, section: "Época de los Reyes", book: "2 Reyes", chapters: "1-3", category: "israel_history" }, // ◆
+            { id: 118, section: "Época de los Reyes", book: "2 Reyes", chapters: "4, 5", category: "israel_history" }, // ◆
+            { id: 119, section: "Época de los Reyes", book: "2 Reyes", chapters: "6-8", category: "israel_history" }, // ◆
+            { id: 120, section: "Época de los Reyes", book: "2 Reyes", chapters: "9, 10", category: "israel_history" }, // ◆
+            { id: 121, section: "Época de los Reyes", book: "2 Reyes", chapters: "11-13", category: "israel_history" }, // ◆
+            { id: 122, section: "Época de los Reyes", book: "2 Reyes", chapters: "14, 15", category: "israel_history" }, // ◆
+            { id: 123, section: "Época de los Reyes", book: "2 Reyes", chapters: "16, 17", category: "israel_history" }, // ◆
+            { id: 124, section: "Época de los Reyes", book: "2 Reyes", chapters: "18, 19", category: "israel_history" }, // ◆
+            { id: 125, section: "Época de los Reyes", book: "2 Reyes", chapters: "20-22", category: "israel_history" }, // ◆
+            { id: 126, section: "Época de los Reyes", book: "2 Reyes", chapters: "23-25", category: "israel_history" }, // ◆
+
+            { id: 127, section: "Época de los Reyes", book: "1 Crónicas", chapters: "1, 2", category: "standard" },
+            { id: 128, section: "Época de los Reyes", book: "1 Crónicas", chapters: "3-5", category: "standard" },
+            { id: 129, section: "Época de los Reyes", book: "1 Crónicas", chapters: "6, 7", category: "standard" },
+            { id: 130, section: "Época de los Reyes", book: "1 Crónicas", chapters: "8-10", category: "standard" },
+            { id: 131, section: "Época de los Reyes", book: "1 Crónicas", chapters: "11, 12", category: "israel_history" }, // ◆
+            { id: 132, section: "Época de los Reyes", book: "1 Crónicas", chapters: "13-15", category: "standard" }, // ◆ 
+            { id: 133, section: "Época de los Reyes", book: "1 Crónicas", chapters: "16, 17", category: "standard" },
+            { id: 134, section: "Época de los Reyes", book: "1 Crónicas", chapters: "18-20", category: "standard" },
+            { id: 135, section: "Época de los Reyes", book: "1 Crónicas", chapters: "21-23", category: "standard" },
+            { id: 136, section: "Época de los Reyes", book: "1 Crónicas", chapters: "24-26", category: "standard" },
+            { id: 137, section: "Época de los Reyes", book: "1 Crónicas", chapters: "27-29", category: "standard" },
+
+            { id: 138, section: "Época de los Reyes", book: "2 Crónicas", chapters: "1-3", category: "standard" },
+            { id: 139, section: "Época de los Reyes", book: "2 Crónicas", chapters: "4-6", category: "standard" },
+            { id: 140, section: "Época de los Reyes", book: "2 Crónicas", chapters: "7-9", category: "standard" },
+            { id: 141, section: "Época de los Reyes", book: "2 Crónicas", chapters: "10-14", category: "standard" },
+            { id: 142, section: "Época de los Reyes", book: "2 Crónicas", chapters: "15-18", category: "standard" },
+            { id: 143, section: "Época de los Reyes", book: "2 Crónicas", chapters: "19-22", category: "standard" },
+            { id: 144, section: "Época de los Reyes", book: "2 Crónicas", chapters: "23-25", category: "standard" },
+            { id: 145, section: "Época de los Reyes", book: "2 Crónicas", chapters: "26-28", category: "standard" }, // (Fuente 265)
+            { id: 146, section: "Época de los Reyes", book: "2 Crónicas", chapters: "29, 30", category: "standard" },
+            { id: 147, section: "Época de los Reyes", book: "2 Crónicas", chapters: "31-33", category: "standard" },
+            { id: 148, section: "Época de los Reyes", book: "2 Crónicas", chapters: "34-36", category: "standard" },
+
+            // --- SECCIÓN: REGRESO DEL DESTIERRO ---
+            { id: 149, section: "Regreso del Destierro", book: "Esdras", chapters: "1-3", category: "israel_history" }, // ◆
+            { id: 150, section: "Regreso del Destierro", book: "Esdras", chapters: "4-7", category: "israel_history" }, 
+            { id: 151, section: "Regreso del Destierro", book: "Esdras", chapters: "8-10", category: "israel_history" }, // ◆
+
+            { id: 152, section: "Regreso del Destierro", book: "Nehemías", chapters: "1-3", category: "israel_history" }, 
+            { id: 153, section: "Regreso del Destierro", book: "Nehemías", chapters: "4-6", category: "israel_history" }, 
+            { id: 154, section: "Regreso del Destierro", book: "Nehemías", chapters: "7, 8", category: "israel_history" },
+            { id: 155, section: "Regreso del Destierro", book: "Nehemías", chapters: "9, 10", category: "israel_history" },
+            { id: 156, section: "Regreso del Destierro", book: "Nehemías", chapters: "11-13", category: "israel_history" }, // ◆
+
+            { id: 157, section: "Regreso del Destierro", book: "Ester", chapters: "1-4", category: "israel_history" }, //
+            { id: 158, section: "Regreso del Destierro", book: "Ester", chapters: "5-10", category: "israel_history" }, //
+
+            // --- SECCIÓN: LIBROS DE CANCIONES Y CONSEJOS ---
+            { id: 159, section: "Libros de Canciones y Consejos", book: "Job", chapters: "1-5", category: "standard" },
+            { id: 160, section: "Libros de Canciones y Consejos", book: "Job", chapters: "6-9", category: "standard" },
+            { id: 161, section: "Libros de Canciones y Consejos", book: "Job", chapters: "10-14", category: "standard" },
+            { id: 162, section: "Libros de Canciones y Consejos", book: "Job", chapters: "15-18", category: "standard" },
+            { id: 163, section: "Libros de Canciones y Consejos", book: "Job", chapters: "19, 20", category: "standard" },
+            { id: 164, section: "Libros de Canciones y Consejos", book: "Job", chapters: "21-24", category: "standard" },
+            { id: 165, section: "Libros de Canciones y Consejos", book: "Job", chapters: "25-29", category: "standard" },
+            { id: 166, section: "Libros de Canciones y Consejos", book: "Job", chapters: "30, 31", category: "standard" },
+            { id: 167, section: "Libros de Canciones y Consejos", book: "Job", chapters: "32-34", category: "standard" },
+            { id: 168, section: "Libros de Canciones y Consejos", book: "Job", chapters: "35-38", category: "standard" },
+            { id: 169, section: "Libros de Canciones y Consejos", book: "Job", chapters: "39-42", category: "standard" },
+
+            { id: 170, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "1-8", category: "standard" },
+            { id: 171, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "9-16", category: "standard" },
+            { id: 172, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "17-19", category: "standard" },
+            { id: 173, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "20-25", category: "standard" },
+            { id: 174, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "26-31", category: "standard" },
+            { id: 175, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "32-35", category: "standard" },
+            { id: 176, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "36-38", category: "standard" },
+            { id: 177, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "39-42", category: "standard" },
+            { id: 178, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "43-47", category: "standard" },
+            { id: 179, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "48-52", category: "standard" },
+            { id: 180, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "53-58", category: "standard" },
+            { id: 181, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "59-64", category: "standard" },
+            { id: 182, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "65-68", category: "standard" },
+            { id: 183, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "69-72", category: "standard" },
+            { id: 184, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "73-77", category: "standard" },
+            { id: 185, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "78, 79", category: "standard" },
+            { id: 186, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "80-86", category: "standard" },
+            { id: 187, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "87-90", category: "standard" },
+            { id: 188, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "91-96", category: "standard" },
+            { id: 189, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "97-103", category: "standard" },
+            { id: 190, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "104, 105", category: "standard" },
+            { id: 191, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "106-108", category: "standard" },
+            { id: 192, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "109-115", category: "standard" },
+            { id: 193, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "116-119:63", category: "standard" },
+            { id: 194, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "119:64-176", category: "standard" },
+            { id: 195, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "120-129", category: "standard" },
+            { id: 196, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "130-138", category: "standard" },
+            { id: 197, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "139-144", category: "standard" },
+            { id: 198, section: "Libros de Canciones y Consejos", book: "Salmos", chapters: "145-150", category: "standard" },
+
+            { id: 199, section: "Libros de Canciones y Consejos", book: "Proverbios", chapters: "1-4", category: "standard" },
+            { id: 200, section: "Libros de Canciones y Consejos", book: "Proverbios", chapters: "5-8", category: "standard" },
+            { id: 201, section: "Libros de Canciones y Consejos", book: "Proverbios", chapters: "9-12", category: "standard" },
+            { id: 202, section: "Libros de Canciones y Consejos", book: "Proverbios", chapters: "13-16", category: "standard" },
+            { id: 203, section: "Libros de Canciones y Consejos", book: "Proverbios", chapters: "17-19", category: "standard" },
+            { id: 204, section: "Libros de Canciones y Consejos", book: "Proverbios", chapters: "20-22", category: "standard" },
+            { id: 205, section: "Libros de Canciones y Consejos", book: "Proverbios", chapters: "23-27", category: "standard" },
+            { id: 206, section: "Libros de Canciones y Consejos", book: "Proverbios", chapters: "28-31", category: "standard" },
+
+            { id: 207, section: "Libros de Canciones y Consejos", book: "Eclesiastés", chapters: "1-4", category: "standard" },
+            { id: 208, section: "Libros de Canciones y Consejos", book: "Eclesiastés", chapters: "5-8", category: "standard" },
+            { id: 209, section: "Libros de Canciones y Consejos", book: "Eclesiastés", chapters: "9-12", category: "standard" },
+
+            { id: 210, section: "Libros de Canciones y Consejos", book: "El Cantar de los Cantares", chapters: "1-8", category: "standard" },
+
+            // --- SECCIÓN: LOS PROFETAS ---
+            { id: 211, section: "Los Profetas", book: "Isaías", chapters: "1-4", category: "standard" },
+            { id: 212, section: "Los Profetas", book: "Isaías", chapters: "5-7", category: "standard" },
+            { id: 213, section: "Los Profetas", book: "Isaías", chapters: "8-10", category: "standard" },
+            { id: 214, section: "Los Profetas", book: "Isaías", chapters: "11-14", category: "standard" },
+            { id: 215, section: "Los Profetas", book: "Isaías", chapters: "15-19", category: "standard" },
+            { id: 216, section: "Los Profetas", book: "Isaías", chapters: "20-24", category: "standard" },
+            { id: 217, section: "Los Profetas", book: "Isaías", chapters: "25-28", category: "standard" },
+            { id: 218, section: "Los Profetas", book: "Isaías", chapters: "29-31", category: "standard" },
+            { id: 219, section: "Los Profetas", book: "Isaías", chapters: "32-35", category: "standard" },
+            { id: 220, section: "Los Profetas", book: "Isaías", chapters: "36, 37", category: "standard" },
+            { id: 221, section: "Los Profetas", book: "Isaías", chapters: "38-40", category: "standard" },
+            { id: 222, section: "Los Profetas", book: "Isaías", chapters: "41-43", category: "standard" },
+            { id: 223, section: "Los Profetas", book: "Isaías", chapters: "44-47", category: "standard" }, 
+            { id: 224, section: "Los Profetas", book: "Isaías", chapters: "48-50", category: "standard" },
+            { id: 226, section: "Los Profetas", book: "Isaías", chapters: "51-55", category: "standard" },
+            { id: 227, section: "Los Profetas", book: "Isaías", chapters: "56-58", category: "standard" },
+            { id: 228, section: "Los Profetas", book: "Isaías", chapters: "59-62", category: "standard" },
+            { id: 229, section: "Los Profetas", book: "Isaías", chapters: "63-66", category: "standard" },
+
+            { id: 230, section: "Los Profetas", book: "Jeremías", chapters: "1-3", category: "standard" },
+            { id: 231, section: "Los Profetas", book: "Jeremías", chapters: "4, 5", category: "standard" },
+            { id: 232, section: "Los Profetas", book: "Jeremías", chapters: "6, 7", category: "standard" },
+            { id: 233, section: "Los Profetas", book: "Jeremías", chapters: "8-10", category: "standard" },
+            { id: 234, section: "Los Profetas", book: "Jeremías", chapters: "11-13", category: "standard" },
+            { id: 235, section: "Los Profetas", book: "Jeremías", chapters: "14-16", category: "standard" },
+            { id: 236, section: "Los Profetas", book: "Jeremías", chapters: "17-20", category: "standard" },
+            { id: 237, section: "Los Profetas", book: "Jeremías", chapters: "21-23", category: "standard" },
+            { id: 238, section: "Los Profetas", book: "Jeremías", chapters: "24-26", category: "standard" },
+            { id: 239, section: "Los Profetas", book: "Jeremías", chapters: "27-29", category: "standard" },
+            { id: 240, section: "Los Profetas", book: "Jeremías", chapters: "30, 31", category: "standard" },
+            { id: 241, section: "Los Profetas", book: "Jeremías", chapters: "32, 33", category: "standard" },
+            { id: 242, section: "Los Profetas", book: "Jeremías", chapters: "34-36", category: "standard" },
+            { id: 243, section: "Los Profetas", book: "Jeremías", chapters: "37-39", category: "standard" },
+            { id: 244, section: "Los Profetas", book: "Jeremías", chapters: "40-42", category: "standard" },
+            { id: 245, section: "Los Profetas", book: "Jeremías", chapters: "43, 44", category: "standard" },
+            { id: 246, section: "Los Profetas", book: "Jeremías", chapters: "45-48", category: "standard" },
+            { id: 247, section: "Los Profetas", book: "Jeremías", chapters: "49, 50", category: "standard" },
+            { id: 248, section: "Los Profetas", book: "Jeremías", chapters: "51, 52", category: "standard" },
+
+            { id: 249, section: "Los Profetas", book: "Lamentaciones", chapters: "1, 2", category: "standard" },
+            { id: 250, section: "Los Profetas", book: "Lamentaciones", chapters: "3-5", category: "standard" },
+
+            { id: 251, section: "Los Profetas", book: "Ezequiel", chapters: "1-3", category: "standard" },
+            { id: 252, section: "Los Profetas", book: "Ezequiel", chapters: "4-6", category: "standard" },
+            { id: 253, section: "Los Profetas", book: "Ezequiel", chapters: "7-9", category: "standard" },
+            { id: 254, section: "Los Profetas", book: "Ezequiel", chapters: "10-12", category: "standard" },
+            { id: 255, section: "Los Profetas", book: "Ezequiel", chapters: "13-15", category: "standard" },
+            { id: 256, section: "Los Profetas", book: "Ezequiel", chapters: "16", category: "standard" },
+            { id: 257, section: "Los Profetas", book: "Ezequiel", chapters: "17, 18", category: "standard" },
+            { id: 258, section: "Los Profetas", book: "Ezequiel", chapters: "19-21", category: "standard" },
+            { id: 259, section: "Los Profetas", book: "Ezequiel", chapters: "22, 23", category: "standard" },
+            { id: 260, section: "Los Profetas", book: "Ezequiel", chapters: "24-26", category: "standard" },
+            { id: 261, section: "Los Profetas", book: "Ezequiel", chapters: "27, 28", category: "standard" },
+            { id: 262, section: "Los Profetas", book: "Ezequiel", chapters: "29-31", category: "standard" },
+            { id: 263, section: "Los Profetas", book: "Ezequiel", chapters: "32, 33", category: "standard" },
+            { id: 264, section: "Los Profetas", book: "Ezequiel", chapters: "34-36", category: "standard" },
+            { id: 265, section: "Los Profetas", book: "Ezequiel", chapters: "37, 38", category: "standard" },
+            { id: 266, section: "Los Profetas", book: "Ezequiel", chapters: "39, 40", category: "standard" },
+            { id: 267, section: "Los Profetas", book: "Ezequiel", chapters: "41-43", category: "standard" },
+            { id: 268, section: "Los Profetas", book: "Ezequiel", chapters: "44, 45", category: "standard" },
+            { id: 269, section: "Los Profetas", book: "Ezequiel", chapters: "46-48", category: "standard" },
+
+            { id: 270, section: "Los Profetas", book: "Daniel", chapters: "1, 2", category: "standard" },
+            { id: 271, section: "Los Profetas", book: "Daniel", chapters: "3, 4", category: "standard" },
+            { id: 272, section: "Los Profetas", book: "Daniel", chapters: "5-7", category: "standard" },
+            { id: 273, section: "Los Profetas", book: "Daniel", chapters: "8-10", category: "standard" },
+            { id: 274, section: "Los Profetas", book: "Daniel", chapters: "11, 12", category: "standard" },
+
+            { id: 275, section: "Los Profetas", book: "Oseas", chapters: "1-7", category: "standard" },
+            { id: 276, section: "Los Profetas", book: "Oseas", chapters: "8-14", category: "standard" },
+
+            { id: 277, section: "Los Profetas", book: "Joel", chapters: "1-3", category: "standard" },
+
+            { id: 278, section: "Los Profetas", book: "Amós", chapters: "1-5", category: "standard" },
+            { id: 279, section: "Los Profetas", book: "Amós", chapters: "6-9", category: "standard" },
+
+            { id: 280, section: "Los Profetas", book: "Abdías/Jonás", chapters: "Completo", category: "standard" },
+
+            { id: 281, section: "Los Profetas", book: "Miqueas", chapters: "1-7", category: "standard" },
+
+            { id: 283, section: "Los Profetas", book: "Nahúm/Habacuc", chapters: "Completo", category: "standard" }, 
+
+            { id: 284, section: "Los Profetas", book: "Sofonías/Ageo", chapters: "Completo", category: "standard" }, 
+
+            { id: 285, section: "Los Profetas", book: "Zacarías", chapters: "1-7", category: "standard" },
+            { id: 286, section: "Los Profetas", book: "Zacarías", chapters: "8-11", category: "standard" },
+            { id: 287, section: "Los Profetas", book: "Zacarías", chapters: "12-14", category: "standard" },
+
+            { id: 288, section: "Los Profetas", book: "Malaquías", chapters: "1-4", category: "standard" },
+
+            // --- SECCIÓN: RELATOS DE LA VIDA Y MINISTERIO DE JESÚS ---
+            { id: 289, section: "Vida de Jesús", book: "Mateo", chapters: "1-4", category: "standard" },
+            { id: 290, section: "Vida de Jesús", book: "Mateo", chapters: "5-7", category: "standard" },
+            { id: 291, section: "Vida de Jesús", book: "Mateo", chapters: "8-10", category: "standard" },
+            { id: 292, section: "Vida de Jesús", book: "Mateo", chapters: "11-13", category: "standard" },
+            { id: 293, section: "Vida de Jesús", book: "Mateo", chapters: "14-17", category: "standard" },
+            { id: 294, section: "Vida de Jesús", book: "Mateo", chapters: "18-20", category: "standard" },
+            { id: 295, section: "Vida de Jesús", book: "Mateo", chapters: "21-23", category: "standard" },
+            { id: 296, section: "Vida de Jesús", book: "Mateo", chapters: "24, 25", category: "standard" },
+            { id: 297, section: "Vida de Jesús", book: "Mateo", chapters: "26", category: "standard" },
+            { id: 298, section: "Vida de Jesús", book: "Mateo", chapters: "27, 28", category: "standard" },
+
+            { id: 299, section: "Vida de Jesús", book: "Marcos", chapters: "1-3", category: "standard" },
+            { id: 300, section: "Vida de Jesús", book: "Marcos", chapters: "4, 5", category: "standard" },
+            { id: 301, section: "Vida de Jesús", book: "Marcos", chapters: "6-8", category: "standard" },
+            { id: 302, section: "Vida de Jesús", book: "Marcos", chapters: "9, 10", category: "standard" },
+            { id: 303, section: "Vida de Jesús", book: "Marcos", chapters: "11-13", category: "standard" },
+            { id: 304, section: "Vida de Jesús", book: "Marcos", chapters: "14-16", category: "standard" }, 
+
+            { id: 305, section: "Vida de Jesús", book: "Lucas", chapters: "1, 2", category: "standard" },
+            { id: 306, section: "Vida de Jesús", book: "Lucas", chapters: "3-5", category: "standard" },
+            { id: 307, section: "Vida de Jesús", book: "Lucas", chapters: "6, 7", category: "standard" },
+            { id: 308, section: "Vida de Jesús", book: "Lucas", chapters: "8, 9", category: "standard" },
+            { id: 309, section: "Vida de Jesús", book: "Lucas", chapters: "10, 11", category: "standard" },
+            { id: 310, section: "Vida de Jesús", book: "Lucas", chapters: "12, 13", category: "standard" },
+            { id: 311, section: "Vida de Jesús", book: "Lucas", chapters: "14-17", category: "standard" },
+            { id: 312, section: "Vida de Jesús", book: "Lucas", chapters: "18, 19", category: "standard" },
+            { id: 313, section: "Vida de Jesús", book: "Lucas", chapters: "20-22", category: "standard" },
+            { id: 314, section: "Vida de Jesús", book: "Lucas", chapters: "23, 24", category: "standard" },
+
+            { id: 315, section: "Vida de Jesús", book: "Juan", chapters: "1-3", category: "standard" },
+            { id: 316, section: "Vida de Jesús", book: "Juan", chapters: "4, 5", category: "standard" },
+            { id: 317, section: "Vida de Jesús", book: "Juan", chapters: "6, 7", category: "standard" },
+            { id: 318, section: "Vida de Jesús", book: "Juan", chapters: "8, 9", category: "standard" },
+            { id: 319, section: "Vida de Jesús", book: "Juan", chapters: "10-12", category: "standard" },
+            { id: 320, section: "Vida de Jesús", book: "Juan", chapters: "13-15", category: "standard" },
+            { id: 321, section: "Vida de Jesús", book: "Juan", chapters: "16-18", category: "standard" },
+            { id: 322, section: "Vida de Jesús", book: "Juan", chapters: "19-21", category: "standard" },
+
+            // --- SECCIÓN: LOS COMIENZOS DE LA CONGREGACIÓN CRISTIANA ---
+            { id: 323, section: "Congregación Cristiana", book: "Hechos", chapters: "1-3", category: "standard" },
+            { id: 324, section: "Congregación Cristiana", book: "Hechos", chapters: "4-6", category: "standard" },
+            { id: 325, section: "Congregación Cristiana", book: "Hechos", chapters: "7, 8", category: "standard" },
+            { id: 326, section: "Congregación Cristiana", book: "Hechos", chapters: "9-11", category: "standard" },
+            { id: 327, section: "Congregación Cristiana", book: "Hechos", chapters: "12-14", category: "standard" },
+            { id: 328, section: "Congregación Cristiana", book: "Hechos", chapters: "15, 16", category: "christian_history" }, // • (Punto Azul)
+            { id: 329, section: "Congregación Cristiana", book: "Hechos", chapters: "17-19", category: "standard" },
+            { id: 330, section: "Congregación Cristiana", book: "Hechos", chapters: "20, 21", category: "christian_history" }, // • (Punto Azul)
+            { id: 331, section: "Congregación Cristiana", book: "Hechos", chapters: "22, 23", category: "christian_history" }, // •
+            { id: 332, section: "Congregación Cristiana", book: "Hechos", chapters: "24-26", category: "christian_history" }, // •
+            { id: 333, section: "Congregación Cristiana", book: "Hechos", chapters: "27, 28", category: "christian_history" }, // •
+
+            // --- SECCIÓN: CARTAS DE PABLO ---
+            { id: 334, section: "Cartas de Pablo", book: "Romanos", chapters: "1-3", category: "standard" },
+            { id: 335, section: "Cartas de Pablo", book: "Romanos", chapters: "4-7", category: "standard" },
+            { id: 336, section: "Cartas de Pablo", book: "Romanos", chapters: "8-11", category: "standard" },
+            { id: 337, section: "Cartas de Pablo", book: "Romanos", chapters: "12-16", category: "standard" },
+
+            { id: 338, section: "Cartas de Pablo", book: "1 Corintios", chapters: "1-6", category: "standard" },
+            { id: 339, section: "Cartas de Pablo", book: "1 Corintios", chapters: "7-10", category: "standard" },
+            { id: 340, section: "Cartas de Pablo", book: "1 Corintios", chapters: "11-14", category: "standard" },
+            { id: 341, section: "Cartas de Pablo", book: "1 Corintios", chapters: "15, 16", category: "standard" },
+
+            { id: 342, section: "Cartas de Pablo", book: "2 Corintios", chapters: "1-6", category: "standard" },
+            { id: 343, section: "Cartas de Pablo", book: "2 Corintios", chapters: "7-10", category: "standard" },
+            { id: 344, section: "Cartas de Pablo", book: "2 Corintios", chapters: "11-13", category: "standard" },
+
+            { id: 345, section: "Cartas de Pablo", book: "Gálatas", chapters: "1-6", category: "standard" },
+
+            { id: 346, section: "Cartas de Pablo", book: "Efesios", chapters: "1-6", category: "standard" },
+
+            { id: 347, section: "Cartas de Pablo", book: "Filipenses", chapters: "1-4", category: "standard" },
+
+            { id: 348, section: "Cartas de Pablo", book: "Colosenses", chapters: "1-4", category: "standard" },
+
+            { id: 349, section: "Cartas de Pablo", book: "1 Tesalonicenses", chapters: "1-5", category: "standard" },
+
+            { id: 350, section: "Cartas de Pablo", book: "2 Tesalonicenses", chapters: "1-3", category: "standard" },
+
+            { id: 351, section: "Cartas de Pablo", book: "1 Timoteo", chapters: "1-6", category: "standard" },
+
+            { id: 352, section: "Cartas de Pablo", book: "2 Timoteo", chapters: "1-4", category: "standard" },
+
+            { id: 353, section: "Cartas de Pablo", book: "Tito/Filemón", chapters: "Completo", category: "standard" },
+
+            { id: 354, section: "Cartas de Pablo", book: "Hebreos", chapters: "1-6", category: "standard" },
+            { id: 355, section: "Cartas de Pablo", book: "Hebreos", chapters: "7-10", category: "standard" },
+            { id: 356, section: "Cartas de Pablo", book: "Hebreos", chapters: "11-13", category: "standard" },
+
+            // --- SECCIÓN: ESCRITOS DE OTROS APÓSTOLES Y DISCÍPULOS ---
+            { id: 357, section: "Escritos de Otros", book: "Santiago", chapters: "1-5", category: "standard" },
+
+            { id: 358, section: "Escritos de Otros", book: "1 Pedro", chapters: "1-5", category: "standard" },
+
+            { id: 359, section: "Escritos de Otros", book: "2 Pedro", chapters: "1-3", category: "standard" },
+
+            { id: 360, section: "Escritos de Otros", book: "1 Juan", chapters: "1-5", category: "standard" },
+
+            { id: 361, section: "Escritos de Otros", book: "2 y 3 Juan/Judas", chapters: "Completo", category: "standard" },
+            
+            { id: 362, section: "Escritos de Otros", book: "Apocalipsis", chapters: "1-4", category: "standard" },
+            { id: 363, section: "Escritos de Otros", book: "Apocalipsis", chapters: "5-9", category: "standard" },
+            { id: 364, section: "Escritos de Otros", book: "Apocalipsis", chapters: "10-14", category: "standard" },
+            { id: 365, section: "Escritos de Otros", book: "Apocalipsis", chapters: "15-18", category: "standard" },
+            { id: 366, section: "Escritos de Otros", book: "Apocalipsis", chapters: "19-22", category: "standard" }
+        ];
+
+        /* --- LOGIC CORE --- */
+
+        // State Init
+        // 1. Inicialización de Datos (Con estructura de perfil nueva)
+        const DATA_KEY = "preacher_v2_data";
+        let defaultData = {
+            userProfile: {
+                name: "Usuario",
+                role: "regular", // 'regular', 'auxiliar', 'publisher'
+                isCoVisit: false,
+                avatar: "misa.png" 
+            },
+            readingProgress: {}, 
+            monthlyStats: { hours: 0, ldc: 0, revisitas: 0, cursos: 0, pubs: 0, videos: 0, participated: false }, // Added participated
+            schedule: {}, // Estructura: { "YYYY-M-D": { time: "09:00", color: "#hex" } }
+            annualHours: 0,
+            photos: [] 
+        };
+
+        /* --- UTILS: HAPTIC FEEDBACK --- */
+        function triggerHaptic(type) {
+            // Si el navegador no soporta vibración (ej. Desktop o iOS estricto), salimos sin error.
+            if (!navigator.vibrate) return; 
+
+            switch (type) {
+                case 'click':
+                    // Golpe seco y cortísimo. Para botones normales.
+                    navigator.vibrate(10); 
+                    break;
+                case 'success':
+                    // "Ta-da". Doble toque rápido. Para guardar cosas.
+                    navigator.vibrate([30, 50, 30]); 
+                    break;
+                case 'toggle':
+                    // Un poco más notable. Para interruptores (Play/Pause).
+                    navigator.vibrate(20); 
+                    break;
+                case 'delete':
+                    // Vibración más pesada/larga. Advertencia.
+                    navigator.vibrate(100); 
+                    break;
+                default:
+                    navigator.vibrate(10);
+            }
+        }
+
+        // Cargar o usar default (Fusionando por si es una versión vieja sin userProfile)
+        let localData = JSON.parse(localStorage.getItem(DATA_KEY));
+        let appData = { ...defaultData, ...localData };
+        // Asegurar que userProfile exista si viene de una versión anterior
+        if(!appData.userProfile) appData.userProfile = defaultData.userProfile;
+
+        // Variables del Cronómetro Mejorado
+        let timerInterval;
+        // Ya no usamos timerSeconds solo, sino el estado guardado
+        let timerState = JSON.parse(localStorage.getItem("preacher_timer_state")) || {
+            isRunning: false,
+            startTime: null,
+            accumulatedSeconds: 0 
+        };
+
+        // Init App
+        window.onload = () => {
+            // Cargas previas...
+            renderReadingList();
+            renderCalendar();
+            checkScheduleNotification();
+            setInterval(checkScheduleNotification, 60000); // Revisar cada minuto para quitar el punto si pasa la hora
+            loadReportInputs();
+            loadPhotos();
+            updateProfileUI();
+            updateDashboard();
+    
+            // Check de cambio de mes
+            const lastMonth = localStorage.getItem("preacher_last_month");
+            const currentMonth = new Date().getMonth();
+            if (lastMonth !== null && parseInt(lastMonth) !== currentMonth) {
+                // Archivar mes anterior (Lógica simple: reset)
+                alert("¡Nuevo mes iniciado! Las estadísticas mensuales se han reiniciado.");
+                appData.monthlyStats = { hours: 0, ldc: 0, revisitas: 0, cursos: 0, pubs: 0, videos: 0 };
+                saveData();
+            }    
+            localStorage.setItem("preacher_last_month", currentMonth);
+
+            // --- NUEVO: Recuperar Cronómetro ---
+            if (timerState.accumulatedSeconds > 0 || timerState.isRunning) {
+                updateTimerDisplay(); // Mostrar tiempo guardado inmediatamente
+                if (timerState.isRunning) {
+                    // Si estaba corriendo, reanudar visualmente y el intervalo
+                    const btn = document.getElementById('play-btn');
+                    btn.innerHTML = '<i class="fas fa-pause"></i>';
+                    startIntervalLoop();
+                }
+            }       
+        };
+
+        function saveData() {
+            localStorage.setItem(DATA_KEY, JSON.stringify(appData));
+            updateDashboard();
+        }
+
+        // Definimos el orden lógico de las vistas para saber la dirección
+        const viewOrder = ['home', 'report', 'reading', 'calendar'];
+
+        // --- NAVIGATION ---
+        function switchView(viewName, element) {
+            triggerHaptic('click');
+            // 1. Determinar dirección de la animación
+            const currentActive = document.querySelector('.nav-item.active');
+            // Encontrar el nombre de la vista actual basándonos en el nav activo o el section activo
+            // Truco: obtenemos el índice actual buscando qué nav tiene la clase active
+            // (Asumimos que los nav-items están en orden en el HTML, igual que el array viewOrder)
+            const navItems = Array.from(document.querySelectorAll('.nav-item'));
+            const currentIndex = navItems.indexOf(currentActive);
+            const newIndex = viewOrder.indexOf(viewName);
+    
+            // Si currentIndex es -1 (error) asumimos 0
+            const safeCurrentIndex = currentIndex === -1 ? 0 : currentIndex;
+    
+            // Lógica: Si voy a un índice mayor -> Forward. Si es menor -> Backward
+            const direction = newIndex > safeCurrentIndex ? 'forward' : 'backward';
+
+            // Función que actualiza el DOM (lo que hacías antes)
+            const updateDOM = () => {
+                // Hide all
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        
+                // Show selected
+                document.getElementById(`view-${viewName}`).classList.add('active');
+                // Si el elemento clickeado se pasó (click desde nav), úsalo. Si no (llamada manual), búscalo.
+                    if(element) {
+                    element.classList.add('active');
+                } else {
+                    // Buscar el nav item correspondiente si no se pasó el elemento clickeado
+                    navItems[newIndex].classList.add('active');
+                }
+
+                // Refresh specific components logic
+                if(viewName === 'reading') {
+                    renderReadingList();
+                    scrollToNextReading();
+                }
+                if(viewName === 'calendar') loadPhotos();
+            };
+
+            // 2. Ejecutar con View Transition API si existe
+            if (!document.startViewTransition) {
+                updateDOM(); // Navegador viejo: cambio directo
+                return;
+            }
+
+            // Asignar dirección al HTML para que el CSS sepa qué animación usar
+            document.documentElement.dataset.transition = direction;
+
+            // ¡Magia! 
+            document.startViewTransition(() => {
+                updateDOM();
+            });
+        }
+
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            const ov = document.getElementById('sidebar-overlay');
+            if (sb.classList.contains('active')) {
+                sb.classList.remove('active');
+                ov.style.display = 'none';
+            } else {
+                sb.classList.add('active');
+                ov.style.display = 'block';
+            }
+        }
+
+        // --- DASHBOARD ---
+        /* --- DASHBOARD V3.0 (Role Aware) --- */
+        function updateDashboard() {
+            // 1. Next Reading (Se mantiene igual)
+            const nextId = bibleReadingPlan.find(item => !appData.readingProgress[item.id]?.completed);
+            const nextCard = document.getElementById('next-reading-card');
+            if (nextId) {
+                let iconHTML = '';
+                if(nextId.category === 'israel_history') iconHTML = '<span class="icon-indicator israel-history">◆</span>';
+                if(nextId.category === 'christian_history') iconHTML = '<span class="icon-indicator christian-history">•</span>';
+        
+                nextCard.innerHTML = `
+                    <div style="font-size:1.2rem;">${iconHTML} <strong>${nextId.book}</strong> ${nextId.chapters}</div>
+                    <small style="color:var(--color-grey-blue)">${nextId.section}</small>
+                    `;
+                nextCard.dataset.id = nextId.id; 
+            } else {
+                nextCard.innerHTML = "<strong>¡Felicidades!</strong> Has completado todo el plan.";
+            }
+
+            // 2. LOGICA DINÁMICA DE PROGRESO (AVATAR Y TEXTO)
+            const role = appData.userProfile.role;
+            const container = document.querySelector('.assistant-avatar-container .progress-text');
+            const misaImg = document.getElementById('misa-avatar');
+            const misaMsg = document.getElementById('misa-msg'); // (Asegúrate de que este ID exista en tu HTML, o usa querySelector)
+    
+            // Si no tienes el ID 'misa-msg' en tu HTML actual, lo creamos dinámicamente o apuntamos al small
+            const msgElement = container.querySelector('small') || document.getElementById('misa-msg');
+
+            if (role === 'publisher') {
+                // --- MODO PUBLICADOR ---
+                const participated = appData.monthlyStats.participated;
+                const courses = appData.monthlyStats.cursos || 0;
+
+                // Renderizado HTML Específico para Publicador
+                container.innerHTML = `
+                    <h3>Estado Mensual</h3>
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <div style="font-size: 1.4rem; font-family: 'League Spartan'; color: ${participated ? 'var(--color-sage-green)' : '#d9534f'};">
+                            ${participated ? '<i class="fas fa-check-circle"></i> Activo' : '<i class="fas fa-times-circle"></i> Sin Actividad'}
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--color-grey-blue); font-weight:600;">
+                            <i class="fas fa-user-friends"></i> ${courses} Cursos Bíblicos
+                        </div>
+                        <small id="misa-msg" style="margin-top:5px; display:block;">${participated ? '¡Excelente servicio!' : 'Recuerda participar pronto.'}</small>
+                    </div>
+                `;
+
+                // Lógica Misael Publicador (Binaria)
+                if (participated) {
+                    misaImg.src = "misa.png";
+                    // msgElement.style.color = "var(--color-olive-dark)"; // Ya seteado arriba
+                } else {
+                    misaImg.src = "misa_annoyed.png";
+                    // msgElement.style.color = "#d9534f";
+                }
+
+            } else {
+                // --- MODO PRECURSOR (Regular/Auxiliar) ---
+                // Restauramos la vista de horas si venimos de modo publicador
+                // Como sobrescribimos el innerHTML, lo reconstruimos para horas
+                const currentHours = parseFloat(appData.monthlyStats.hours).toFixed(1);
+        
+                container.innerHTML = `
+                    <h3>Progreso Mensual</h3>
+                    <div style="font-size: 2rem; font-family: 'League Spartan'; color: var(--color-olive-dark);">
+                        <span id="home-hours">${currentHours}</span>h
+                    </div>
+                    <small id="misa-msg">Calculando...</small>
+                `;
+
+                // Lógica Misael Precursor (Matemática)
+                const d = new Date();
+                const dayOfMonth = d.getDate();
+                const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        
+                // Definir meta según rol
+                let monthlyGoal = 50; 
+                if (role === 'auxiliar') monthlyGoal = appData.userProfile.isCoVisit ? 15 : 30;
+
+                const targetToday = (monthlyGoal / daysInMonth) * dayOfMonth;
+                const current = parseFloat(appData.monthlyStats.hours);
+        
+                const finalMsg = container.querySelector('small');
+
+                if (current < (targetToday - 5)) { 
+                    misaImg.src = "misa_annoyed.png";
+                    finalMsg.innerText = "Estamos atrasados. ¡A ponerle ganas!";
+                    finalMsg.style.color = "#d9534f";
+                } else {
+                    misaImg.src = "misa.png";
+                    finalMsg.innerText = "¡Vas muy bien! Sigue así.";
+                    finalMsg.style.color = "var(--color-olive-dark)";
+                }
+            }
+        }
+
+        function markNextReadingDone() {
+            const nextCard = document.getElementById('next-reading-card');
+            const id = nextCard.dataset.id;
+            if(id) {
+                toggleReading(parseInt(id), true); // Force true
+                triggerConfetti();
+            }
+        }
+
+        // --- STOPWATCH ---
+        function toggleTimer() {
+            triggerHaptic('toggle');
+            const btn = document.getElementById('play-btn');
+    
+            if (timerState.isRunning) {
+                // PAUSAR
+                clearInterval(timerInterval);
+                // Calculamos cuánto tiempo pasó en esta sesión y lo sumamos al acumulado
+                const now = Date.now();
+                const elapsedSession = Math.floor((now - timerState.startTime) / 1000);
+                timerState.accumulatedSeconds += elapsedSession;
+        
+                timerState.isRunning = false;
+                timerState.startTime = null;
+        
+                btn.innerHTML = '<i class="fas fa-play"></i>';
+                btn.classList.remove('active-timer-btn'); // Opcional: estilo visual
+            } else {
+                // INICIAR / REANUDAR
+                timerState.isRunning = true;
+                timerState.startTime = Date.now();
+        
+            startIntervalLoop();
+        
+                btn.innerHTML = '<i class="fas fa-pause"></i>';
+                btn.classList.add('active-timer-btn');
+            }
+            saveTimerState();
+        }
+
+        function startIntervalLoop() {
+            // Limpiamos cualquier intervalo previo por seguridad
+            if (timerInterval) clearInterval(timerInterval);
+    
+            timerInterval = setInterval(() => {
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            let totalSeconds = timerState.accumulatedSeconds;
+    
+            // Si está corriendo, sumamos el tiempo real transcurrido desde el último clic en Play
+            if (timerState.isRunning && timerState.startTime) {
+                const now = Date.now();
+                const currentSessionSeconds = Math.floor((now - timerState.startTime) / 1000);
+                totalSeconds += currentSessionSeconds;
+            }
+
+            const hrs = Math.floor(totalSeconds / 3600);
+            const mins = Math.floor((totalSeconds % 3600) / 60);
+            const secs = totalSeconds % 60;
+    
+            document.getElementById('timer-display').innerText = 
+                `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        
+            // Actualizar título de la pestaña (UX Bonus)
+            if(timerState.isRunning) {
+                document.title = `⏱ ${hrs}:${mins.toString().padStart(2, '0')} - Preacher`;
+            } else {
+                document.title = "Preacher 2.0";
+            }
+
+            // --- NUEVA LÓGICA: AUTO-PARTICIPACIÓN PARA PUBLICADORES ---
+            // Verifica: ¿Es Publicador? AND ¿Pasó 1 minuto? AND ¿Aún no está marcado?
+            if (appData.userProfile.role === 'publisher' && totalSeconds >= 60 && !appData.monthlyStats.participated) {
+        
+                appData.monthlyStats.participated = true;
+                saveData(); // Guardar el cambio automáticamente en la base de datos local
+        
+                // Si el usuario está viendo el Dashboard en este momento, actualizamos a Misael
+                if (document.getElementById('view-home').classList.contains('active')) {
+                    updateDashboard(); // Misael cambiará de molesto a feliz instantáneamente
+                    triggerConfetti(); // ¡Pequeña celebración automática! 🎉
+                }
+            }
+        }
+
+        function resetTimer() {
+            if(timerState.isRunning) toggleTimer(); // Pausar primero si corre
+            if(confirm("¿Seguro que quieres reiniciar el contador a 0?")) {
+                timerState = { isRunning: false, startTime: null, accumulatedSeconds: 0 };
+                saveTimerState();
+                updateTimerDisplay();
+            }
+        }
+
+        function stopAndSaveTimer() {
+            // Forzamos pausa para consolidar el tiempo
+            if (timerState.isRunning) toggleTimer();
+    
+            if (timerState.accumulatedSeconds > 0) {
+                // Convertir a horas con decimales
+                const hoursToAdd = timerState.accumulatedSeconds / 3600;
+        
+                if (confirm(`¿Guardar ${hoursToAdd.toFixed(2)} horas al informe?`)) {
+                    triggerHaptic('success');
+                    appData.monthlyStats.hours = (parseFloat(appData.monthlyStats.hours) || 0) + hoursToAdd;
+                    appData.annualHours = (parseFloat(appData.annualHours) || 0) + hoursToAdd;
+            
+                    saveData();
+                    loadReportInputs(); 
+            
+                    // Reset silencioso post-guardado
+                    timerState = { isRunning: false, startTime: null, accumulatedSeconds: 0 };
+                    saveTimerState();
+                    updateTimerDisplay();
+            
+                    alert("¡Tiempo registrado correctamente!");
+                }
+            } else {
+                alert("El cronómetro está en cero.");
+            }
+        }
+
+        function saveTimerState() {
+            localStorage.setItem("preacher_timer_state", JSON.stringify(timerState));
+        }
+
+        // --- REPORTING ---
+        function loadReportInputs() {
+            document.getElementById('input-hours').value = appData.monthlyStats.hours;
+            document.getElementById('input-ldc').value = appData.monthlyStats.ldc;
+            document.getElementById('input-revisitas').value = appData.monthlyStats.revisitas;
+            document.getElementById('input-cursos').value = appData.monthlyStats.cursos;
+            document.getElementById('input-pubs').value = appData.monthlyStats.pubs;
+            document.getElementById('input-videos').value = appData.monthlyStats.videos;
+            
+            updateStatsUI();
+        }
+
+        function updateStats() {
+            appData.monthlyStats.hours = parseFloat(document.getElementById('input-hours').value) || 0;
+            appData.monthlyStats.ldc = parseFloat(document.getElementById('input-ldc').value) || 0;
+            appData.monthlyStats.revisitas = parseInt(document.getElementById('input-revisitas').value) || 0;
+            appData.monthlyStats.cursos = parseInt(document.getElementById('input-cursos').value) || 0;
+            appData.monthlyStats.pubs = parseInt(document.getElementById('input-pubs').value) || 0;
+            appData.monthlyStats.videos = parseInt(document.getElementById('input-videos').value) || 0;
+            
+            // Recalculate Annual rough estimate (in real app, sum all months)
+            // For V2.0 MVP, we just store annual separately or accumulate
+            // Let's assume input changes update the stored annual based on diff, 
+            // but simply saving the monthly state is safer for now.
+            
+            saveData();
+            updateStatsUI();
+        }
+
+        /* --- UPDATED REPORT LOGIC (Adaptable) --- */
+
+        function updateStatsUI() {
+            const role = appData.userProfile.role;
+            let goal = 50; // Default Regular
+            let showHours = true;
+            let showAnnual = true;
+
+            // Lógica de Metas
+            if (role === 'regular') {
+                goal = 50;
+            } else if (role === 'auxiliar') {
+                goal = appData.userProfile.isCoVisit ? 15 : 30;
+                showAnnual = false; // Auxiliares no suelen tener meta anual estricta visualizada aquí
+            } else if (role === 'publisher') {
+                goal = 0;
+                showHours = false; // Publicadores no reportan horas, solo "Participó"
+                showAnnual = false;
+            }
+
+            // UI Updates
+            const hoursCard = document.querySelector('#view-report .stat-grid').parentElement;
+            const annualCard = document.querySelector('#view-report .card.highlight');
+            const inputHoursGroup = document.getElementById('input-hours').parentElement;
+
+            if (showHours) {
+                // MODO PRECURSOR (Regular o Auxiliar)
+                document.getElementById('report-total-hours').innerText = appData.monthlyStats.hours.toFixed(1) + " hrs";
+                // Mostrar Meta
+                hoursCard.querySelector('small').innerText = "Meta Mensual";
+                hoursCard.querySelector('h3').innerText = goal + " hrs";
+        
+                // Barra de progreso
+                const pct = Math.min((appData.monthlyStats.hours / goal) * 100, 100);
+                document.getElementById('progress-bar-fill').style.width = pct + "%";
+        
+                // Inputs
+                inputHoursGroup.style.display = "block";
+                document.getElementById('input-ldc').parentElement.style.display = "block";
+
+            } else {
+                // MODO PUBLICADOR
+                // Cambiar tarjeta de meta por "Estado"
+                hoursCard.querySelector('small').innerText = "Estado del Mes";
+        
+                const hasParticipated = appData.monthlyStats.participated;
+                const statusHTML = hasParticipated 
+                    ? '<span style="color:var(--color-sage-green); font-size:1.2rem;"><i class="fas fa-check-circle"></i> Participó</span>'
+                    : '<span style="color:#d9534f; font-size:1.2rem;">Sin actividad</span>';
+            
+                hoursCard.querySelector('h3').innerHTML = statusHTML;
+                document.getElementById('report-total-hours').innerText = ""; // Ocultar contador numérico derecho
+                document.getElementById('progress-bar-fill').style.width = hasParticipated ? "100%" : "0%";
+
+                // Ocultar Input Horas y mostrar Checkbox Participación
+                inputHoursGroup.style.display = "none";
+                document.getElementById('input-ldc').parentElement.style.display = "none"; // Publicadores raramente informan LDC separado en app personal
+        
+                // Inyectar el checkbox de "Participó" si no existe
+                let partCheck = document.getElementById('participated-check');
+                if(!partCheck) {
+                    const div = document.createElement('div');
+                    div.className = 'input-group';
+                    div.id = 'publisher-check-container';
+                    div.innerHTML = `
+                        <label style="color:var(--color-deep-olive); font-weight:bold;">¿Participaste en el ministerio?</label>
+                        <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
+                            <input type="checkbox" id="participated-check" onchange="updateStats()" style="width:25px; height:25px;">
+                            <span>Sí, prediqué este mes.</span>
+                        </div>
+                    `;
+                    // Insertar al principio del form
+                    const form = document.getElementById('report-form');
+                    form.insertBefore(div, form.firstChild);
+                }
+                // Sincronizar estado checkbox
+                document.getElementById('participated-check').checked = appData.monthlyStats.participated;
+            }
+
+            // Mostrar/Ocultar Anual
+            annualCard.style.display = showAnnual ? "block" : "none";
+            if(showAnnual) {
+                document.getElementById('annual-total').innerText = appData.annualHours.toFixed(1);
+            }
+        }
+
+        // Actualizar updateStats para guardar el checkbox de publicador
+        const originalUpdateStats = updateStats; // Guardar referencia si existe
+        updateStats = function() {
+            // Lógica original de inputs numéricos
+            appData.monthlyStats.hours = parseFloat(document.getElementById('input-hours').value) || 0;
+            appData.monthlyStats.ldc = parseFloat(document.getElementById('input-ldc').value) || 0;
+            appData.monthlyStats.revisitas = parseInt(document.getElementById('input-revisitas').value) || 0;
+            appData.monthlyStats.cursos = parseInt(document.getElementById('input-cursos').value) || 0;
+            appData.monthlyStats.pubs = parseInt(document.getElementById('input-pubs').value) || 0;
+            appData.monthlyStats.videos = parseInt(document.getElementById('input-videos').value) || 0;
+    
+            // NUEVO: Checkbox de publicador
+            const partCheck = document.getElementById('participated-check');
+            if(partCheck) {
+                appData.monthlyStats.participated = partCheck.checked;
+            }
+
+            saveData();
+            updateStatsUI();
+        }
+
+        // --- READING LIST ---
+        /* --- READING LIST V2.0 (Agrupada + AutoScroll) --- */
+
+        function renderReadingList() {
+            const container = document.getElementById('reading-list-container');
+            container.innerHTML = '';
+
+            let lastBook = null;
+            let totalItems = bibleReadingPlan.length;
+            let completedItems = 0;
+            let firstUnreadId = null;
+
+            bibleReadingPlan.forEach(item => {
+                const isCompleted = appData.readingProgress[item.id]?.completed;
+                const note = appData.readingProgress[item.id]?.note || '';
+        
+                if (isCompleted) completedItems++;
+                else if (!firstUnreadId) firstUnreadId = item.id; // Capturar el primero no leído
+
+            // 1. Renderizar Encabezado de Libro si cambia
+            if (item.book !== lastBook) {
+                const header = document.createElement('div');
+                header.className = 'book-header';
+                header.innerText = item.book;
+                container.appendChild(header);
+                lastBook = item.book;
+            }
+
+            // 2. Configurar Iconos y Clases
+            let iconClass = '';
+            let iconChar = '';
+            if(item.category === 'israel_history') { iconClass = 'israel-history'; iconChar = '◆'; }
+            if(item.category === 'christian_history') { iconClass = 'christian-history'; iconChar = '•'; }
+
+            // Clase especial para el siguiente ítem a leer (para resaltarlo)
+            const isNextUp = (item.id === firstUnreadId);
+            const itemClass = `reading-item ${isCompleted ? 'completed' : ''} ${isNextUp ? 'next-up' : ''}`;
+            const itemIdStr = `reading-item-${item.id}`; // ID para el scroll
+
+            // 3. Crear Elemento HTML
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <div id="${itemIdStr}" class="${itemClass}" onclick="toggleAccordion(${item.id})">
+                    <div class="reading-content">
+                        <div class="icon-indicator ${iconClass}">${iconChar}</div>
+                        <div class="book-info">
+                            <div class="book-title">Caps. ${item.chapters}</div>
+                            </div>
+                    </div>
+                    
+                    <div class="check-circle" onclick="event.stopPropagation(); toggleReading(${item.id})">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+                <div class="reading-note-area" id="note-area-${item.id}">
+                    <textarea placeholder="Nota sobre ${item.book} ${item.chapters}..." id="note-text-${item.id}">${note}</textarea>
+                    <button onclick="saveNote(${item.id})">Guardar Nota</button>
+                </div>
+            `;
+            container.appendChild(div);
+    
+        });
+
+            // 4. Actualizar Barra de Progreso Superior
+            const percent = Math.round((completedItems / totalItems) * 100);
+            document.getElementById('reading-percent-text').innerText = `${percent}%`;
+            document.getElementById('reading-progress-fill').style.width = `${percent}%`;
+        }
+
+         // Nueva función para hacer scroll automático
+        function scrollToNextReading() {
+            // Buscamos el primer ítem no leído
+            const nextId = bibleReadingPlan.find(item => !appData.readingProgress[item.id]?.completed)?.id;
+    
+            if (nextId) {
+                setTimeout(() => {
+                    const el = document.getElementById(`reading-item-${nextId}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 300); // Pequeño delay para permitir que la vista cambie
+            }
+        }
+
+        function toggleReading(id, forceTrue = false) {
+            triggerHaptic('click');
+            if(!appData.readingProgress[id]) appData.readingProgress[id] = {};
+            
+            const newState = forceTrue ? true : !appData.readingProgress[id].completed;
+            appData.readingProgress[id].completed = newState;
+            
+            saveData();
+            renderReadingList(); // Re-render to show updates
+            
+            if(newState === true) {
+                // Check if triggered from list or home, trigger confetti
+                 triggerConfetti();
+            }
+        }
+
+        function toggleAccordion(id) {
+            const el = document.getElementById(`note-area-${id}`);
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function saveNote(id) {
+            const text = document.getElementById(`note-text-${id}`).value;
+            if(!appData.readingProgress[id]) appData.readingProgress[id] = {};
+            appData.readingProgress[id].note = text;
+            saveData();
+            alert("Nota guardada");
+        }
+
+        // --- PHOTOS / GHOST FILE ---
+        function handlePhotoUpload(input) {
+            if (input.files && input.files[0]) {
+                // 1. Validar Límite Diario (Max 2 hoy)
+                const todayStr = new Date().toLocaleDateString();
+                const todaysPhotos = appData.photos.filter(p => p.date === todayStr);
+        
+            if (todaysPhotos.length >= 2) {
+                alert("⚠️ Límite diario alcanzado.\nSolo puedes subir 2 fotos por día.");
+                input.value = ''; // Limpiar input
+                return;
+            }
+
+            // Mostrar indicador de carga (simple UX hack)
+            const uploadArea = document.querySelector('.photo-upload-area p');
+            const originalText = uploadArea.innerText;
+            uploadArea.innerText = "⏳ Comprimiendo...";
+
+            const file = input.files[0];
+            const reader = new FileReader();
+        
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+            
+                img.onload = function() {
+                    // Ghost File Logic (Canvas Compression)
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                
+                    // Max dimensions (800px es suficiente para móvil)
+                    const maxWidth = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                
+                    // Compresión agresiva pero visualmente aceptable (JPEG 0.6)
+                    const compressedData = canvas.toDataURL('image/jpeg', 0.6);
+                
+                    // Guardar Objeto Estructurado
+                    const newPhoto = {
+                        id: Date.now(), // ID único basado en tiempo
+                        date: todayStr,
+                        data: compressedData
+                    };
+
+                    // Migración segura: Si appData.photos era un array de strings, lo convertimos
+                    if (appData.photos.length > 0 && typeof appData.photos[0] === 'string') {
+                        appData.photos = []; // Reset si formato antiguo (o podrías migrarlo)
+                    }
+
+                    appData.photos.unshift(newPhoto); // Añadir al principio
+                    saveData();
+                    loadPhotos();
+                
+                    // Reset UX
+                    uploadArea.innerText = originalText;
+                    input.value = '';
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function loadPhotos() {
+            const container = document.getElementById('photo-gallery');
+            container.innerHTML = '';
+    
+            // Manejo de estado vacío
+            if (!appData.photos || appData.photos.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#aaa; padding:20px;">No hay fotos este mes</div>';
+                return;
+            }
+
+            appData.photos.forEach(photo => {
+                // Soporte retroactivo para versiones anteriores (si es string)
+                const imgSrc = (typeof photo === 'string') ? photo : photo.data;
+                const dateLabel = (typeof photo === 'object' && photo.date) ? photo.date.slice(0, 5) : ''; // Solo dd/mm
+                const id = photo.id || Math.random();
+
+                const div = document.createElement('div');
+                div.className = 'photo-card';
+                div.innerHTML = `
+                    <img src="${imgSrc}" class="photo-thumb" onclick="viewPhoto('${imgSrc}')">
+                    <button class="delete-btn" onclick="deletePhoto(${id})"><i class="fas fa-trash"></i></button>
+                    ${dateLabel ? `<div class="photo-date-badge">${dateLabel}</div>` : ''}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function deletePhoto(id) {
+            triggerHaptic('delete');
+            if(confirm("¿Borrar esta foto permanentemente?")) {
+            // Filtramos la foto que coincida con el ID
+                    appData.photos = appData.photos.filter(p => p.id !== id);
+                saveData();
+                loadPhotos();
+            }
+        }
+
+        // Visualizador simple (Zoom)
+        function viewPhoto(src) {
+            // Podrías implementar un modal aquí, por ahora abrimos en nueva pestaña
+            const w = window.open("");
+            w.document.write('<img src="' + src + '" style="width:100%">');
+        }
+
+        // --- MODALS & QUICK ACTIONS ---
+        function openAddModal() {
+            const role = appData.userProfile.role;
+    
+            // 1. Configurar Visibilidad según Rol
+            if (role === 'publisher') {
+                document.getElementById('modal-hours-group').style.display = 'none';
+                document.getElementById('modal-publisher-group').style.display = 'block';
+        
+                // Cargar estado actual del checkbox
+                document.getElementById('quick-participated').checked = appData.monthlyStats.participated;
+            } else {
+                document.getElementById('modal-hours-group').style.display = 'block';
+                document.getElementById('modal-publisher-group').style.display = 'none';
+        
+                // Limpiar input de horas
+                document.getElementById('quick-add-hours').value = '';
+            }
+
+            // 2. Cargar cursos actuales (para todos)
+            document.getElementById('quick-courses').value = appData.monthlyStats.cursos || '';
+
+            document.getElementById('add-modal').classList.add('active');
+        }
+
+        function closeAddModal() { document.getElementById('add-modal').classList.remove('active'); }
+        
+        function quickAdd() {
+            const role = appData.userProfile.role;
+            let changesMade = false;
+
+            // A. Guardar Horas (Solo Precursores)
+            if (role !== 'publisher') {
+                const hoursVal = parseFloat(document.getElementById('quick-add-hours').value);
+                if (hoursVal) {
+                    appData.monthlyStats.hours += hoursVal;
+                    appData.annualHours += hoursVal;
+                    changesMade = true;
+                }
+            } else {
+                // B. Guardar Participación (Solo Publicadores)
+                const participated = document.getElementById('quick-participated').checked;
+                // Solo marcar cambio si es diferente a lo que ya estaba (aunque guardar de nuevo no hace daño)
+                appData.monthlyStats.participated = participated;
+                changesMade = true; 
+            }
+
+            // C. Guardar Cursos (Todos)
+            const coursesVal = document.getElementById('quick-courses').value;
+            if (coursesVal !== '') {
+                appData.monthlyStats.cursos = parseInt(coursesVal);
+                changesMade = true;
+            }
+
+            if (changesMade) {
+                triggerHaptic('success');
+                saveData();
+                loadReportInputs(); // Refrescar vista de reporte si está abierta
+                closeAddModal();
+        
+                // Feedback visual simple
+                // Si hay confeti disponible, un chorrito pequeño de celebración
+                // (Opcional, si quieres celebrar cada registro)
+                triggerConfetti();
+            } else {
+                closeAddModal();
+            }
+        }
+
+        // --- VISUAL EFFECTS ---
+        function triggerConfetti() {
+            // Mary Animation
+            const mary = document.getElementById('mary-pop');
+            mary.classList.add('active');
+            
+            // Canvas Confetti Logic (Simplified)
+            const canvas = document.getElementById("confetti-canvas");
+            canvas.style.display = 'block';
+            const ctx = canvas.getContext("2d");
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const pieces = [];
+            for(let i=0; i<100; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    size: Math.random() * 10 + 5,
+                    speed: Math.random() * 5 + 2
+                });
+            }
+
+            let animationId;
+            function animate() {
+                ctx.clearRect(0,0, canvas.width, canvas.height);
+                let active = false;
+                pieces.forEach(p => {
+                    p.y += p.speed;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                    if(p.y < canvas.height) active = true;
+                });
+                
+                if(active) animationId = requestAnimationFrame(animate);
+                else {
+                    canvas.style.display = 'none';
+                    mary.classList.remove('active');
+                }
+            }
+            animate();
+            
+            // Auto hide mary after 3s if animation loop finishes early or late
+            setTimeout(() => { mary.classList.remove('active'); canvas.style.display='none'; }, 3000);
+        }
+
+        /* --- UTILS --- */
+        function exportBackup() {
+            const dataStr = JSON.stringify(appData);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+            const exportFileDefaultName = 'preacher_backup_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.json';
+    
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+    
+            alert("Archivo de respaldo generado. Guárdalo en un lugar seguro.");
+        }
+
+        /* --- RESTORE UTILS --- */
+
+        // 1. Disparador del input oculto
+        function triggerRestore() {
+            document.getElementById('restore-input').click();
+        }
+
+        // 2. Manejador del archivo seleccionado
+        function handleRestoreFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Confirmación de seguridad
+            if (!confirm("⚠️ ¡ADVERTENCIA!\n\nAl restaurar una copia de seguridad, se BORRARÁN todos los datos actuales y serán reemplazados por los del archivo.\n\n¿Estás seguro de continuar?")) {
+                input.value = ''; // Reset input
+                return;
+            }
+
+            const reader = new FileReader();
+    
+            reader.onload = function(e) {
+                // Usamos un pequeño timeout para que el loader se vea al menos un momento
+                // y el navegador tenga tiempo de renderizarlo antes de bloquearse procesando
+                setTimeout(() => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+
+                        if (!importedData.monthlyStats || !importedData.readingProgress) {
+                            throw new Error("El archivo no parece ser un backup válido.");
+                        }
+
+                        const safeData = { ...appData, ...importedData };
+
+                        localStorage.setItem(DATA_KEY, JSON.stringify(safeData));
+                
+                        // No ocultamos el loader aquí porque el reload es inmediato
+                        // y queda mejor que se vea hasta que refresque.
+                        location.reload(); 
+
+                    } catch (error) {
+                        // Si falla, ocultamos el loader para mostrar el error
+                        loader.style.display = 'none';
+                        alert("❌ Error al restaurar:\n" + error.message);
+                        console.error(error);
+                    }
+                }, 500); // 500ms de "drama" visual para que el usuario sepa que algo pasó
+            };
+    
+            reader.readAsText(file);
+            input.value = ''; 
+        }
+
+        /* --- PROFILE LOGIC --- */
+
+        function openProfileModal() {
+            // Cargar datos actuales en los inputs
+            document.getElementById('profile-name').value = appData.userProfile.name;
+            document.getElementById('profile-role').value = appData.userProfile.role;
+            document.getElementById('profile-co-visit').checked = appData.userProfile.isCoVisit;
+            document.getElementById('profile-preview-img').src = appData.userProfile.avatar;
+    
+            toggleProfileOptions(); // Mostrar/Ocultar checkbox según rol
+            document.getElementById('profile-modal').classList.add('active');
+            
+            // --- NUEVO: CERRAR EL MENÚ LATERAL AUTOMÁTICAMENTE ---
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebar-overlay').style.display = 'none';
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.remove('active');
+        }
+
+        function toggleProfileOptions() {
+            const role = document.getElementById('profile-role').value;
+            const auxOptions = document.getElementById('aux-options');
+            // Mostrar checkbox solo si es Auxiliar
+            auxOptions.style.display = (role === 'auxiliar') ? 'block' : 'none';
+        }
+
+        function handleAvatarPreview(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Previsualizar (aún no guardamos)
+                    document.getElementById('profile-preview-img').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveProfile() {
+            // 1. Obtener valores
+            const name = document.getElementById('profile-name').value;
+            const role = document.getElementById('profile-role').value;
+            const isCoVisit = document.getElementById('profile-co-visit').checked;
+            const avatarSrc = document.getElementById('profile-preview-img').src;
+
+            // 2. Guardar en appData
+            appData.userProfile = {
+                name: name || "Usuario",
+                role: role,
+                isCoVisit: isCoVisit,
+                avatar: avatarSrc
+            };
+
+            saveData();
+            updateProfileUI(); // Actualizar sidebar y home
+            closeProfileModal();
+            alert("Perfil actualizado correctamente.");
+        }
+
+        function updateProfileUI() {
+            // Actualizar Sidebar
+            document.getElementById('sidebar-username').innerText = appData.userProfile.name;
+            document.getElementById('sidebar-avatar-img').src = appData.userProfile.avatar;
+    
+            // Texto bonito del rol
+            let roleText = "Precursor Regular";
+            if(appData.userProfile.role === 'auxiliar') roleText = "Precursor Auxiliar";
+            if(appData.userProfile.role === 'publisher') roleText = "Publicador";
+            document.getElementById('sidebar-role').innerText = roleText;
+
+            // Actualizar Avatar en Dashboard (Misael)
+            // Nota: Si quieres que el usuario reemplace a Misael, usa appData.userProfile.avatar.
+            // Si quieres mantener a Misael como "asistente" y al usuario aparte, deja 'misa.png'.
+            // Por tu solicitud de "personalizado", asumiré que quieres ver TU foto si la cambias:
+            // document.getElementById('misa-avatar').src = appData.userProfile.avatar; 
+            // ^ DESCOMENTAR LÍNEA ARRIBA si quieres reemplazar a Misael por tu foto.
+    
+            updateStatsUI(); // Recalcular metas
+        }
+
+        /* --- CALENDAR & SCHEDULE LOGIC --- */
+
+        let currentCalendarDate = new Date();
+        let selectedScheduleDate = null; // String "YYYY-M-D"
+        let activeDateFilter = null; // Para filtrar fotos
+
+        // Inicializar calendario al cargar
+        // Añadir esto dentro de window.onload
+        // renderCalendar();
+        // checkScheduleNotification();
+        // setInterval(checkScheduleNotification, 60000); // Chequear cada minuto
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            const monthYear = document.getElementById('calendar-month-year');
+    
+            grid.innerHTML = '';
+    
+            // Configurar Mes y Año
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+    
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            monthYear.innerText = `${monthNames[month]} ${year}`;
+
+            // Cabeceras Días
+            const daysShort = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+            daysShort.forEach(d => {
+                const div = document.createElement('div');
+                div.className = 'weekday-label';
+                div.innerText = d;
+                grid.appendChild(div);
+            });
+
+            // Lógica de Días
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const lastDay = new Date(year, month + 1, 0).getDate();
+    
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+            // Espacios vacíos antes del día 1
+            for(let i=0; i<firstDayIndex; i++) {
+                const div = document.createElement('div');
+                div.className = 'calendar-day empty';
+                grid.appendChild(div);
+            }
+
+            // Días del mes
+            for(let i=1; i<=lastDay; i++) {
+                const dateKey = `${year}-${month+1}-${i}`; // Key para appData (sin ceros izq para simplificar)
+                // Formato para fotos (depende de cómo guardas, asumimos toLocaleDateString puede variar, 
+                // pero idealmente estandarizar a D/M/YYYY o similar. Usaré la dateKey para schedule).
+        
+                // Buscar evento
+                const event = appData.schedule && appData.schedule[dateKey];
+        
+                // Buscar si hay fotos (Comparación simple de string fecha)
+                // Nota: appData.photos guardan date como "D/M/YYYY" o "DD/MM/YYYY" según locale.
+                // Haremos un chequeo flexible.
+                const hasPhotos = appData.photos.some(p => {
+                    // Normalizar fecha de foto para comparar
+                    // Esto asume que photo.date es dd/mm/yyyy
+                    const parts = p.date.split('/');
+                    return parseInt(parts[0]) === i && parseInt(parts[1]) === (month+1) && parseInt(parts[2]) === year;
+                });
+
+                const div = document.createElement('div');
+                div.className = 'calendar-day';
+                div.innerText = i;
+        
+                if (isCurrentMonth && i === today.getDate()) div.classList.add('today');
+                if (dateKey === activeDateFilter) div.classList.add('selected-filter');
+
+                // Si hay evento
+                if (event) {
+                    div.classList.add('has-event');
+                    div.style.backgroundColor = event.color;
+                }
+
+                // Si hay fotos (punto)
+                if (hasPhotos) {
+                    const dot = document.createElement('div');
+                    dot.className = 'photo-dot';
+                    div.appendChild(dot);
+                }
+
+                // Click Event: Agendar O Filtrar
+                div.onclick = () => handleDateClick(dateKey, i);
+
+                grid.appendChild(div);
+            }
+        }
+
+        function changeMonth(delta) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function handleDateClick(dateKey, day) {
+            // 1. Preguntar intención o abrir modal directo?
+            // El usuario pidió: "al tocar la fecha correspondiente... ver fotos"
+            // PERO TAMBIÉN: "marcar fecha... abrir modal".
+            // SOLUCIÓN: Si hay fotos, filtramos primero. Si no, o si clickea de nuevo, abrimos modal.
+            // O mejor: Abrir modal siempre, y en el modal poner botón "Ver fotos de este día".
+    
+            // Vamos a seguir el flujo "Instagram": 
+            // Click -> Filtra las fotos abajo.
+            // Doble Click o Long Press -> Abre Modal?
+            // O Botón separado?
+    
+            // IMPLEMENTACIÓN SOLICITADA EXACTA:
+            // "cuando el usuario seleccione la fecha, que se abra un modal" -> PRIORIDAD AGENDAR.
+            // "usuario pudiera ver las fotos... al tocar la fecha" -> CONFLICTO DE INTERACCIÓN.
+    
+            // SOLUCIÓN HÍBRIDA:
+            // Al hacer click, filtramos las fotos Y abrimos el modal de agenda.
+            // Así cumple ambas cosas.
+    
+            selectedScheduleDate = dateKey;
+    
+            // A. Filtrar Fotos
+            filterPhotosByDate(day, currentCalendarDate.getMonth() + 1, currentCalendarDate.getFullYear());
+    
+            // B. Abrir Modal de Agenda
+            openScheduleModal(dateKey);
+        }
+
+        // --- FILTRADO DE FOTOS ---
+        function filterPhotosByDate(day, month, year) {
+            // Reconstruir formato local (ajustar según tu navegador, ej: "d/m/aaaa")
+            // Para ser seguros, filtramos analizando los componentes
+            const container = document.getElementById('photo-gallery');
+            container.innerHTML = '';
+    
+            const filtered = appData.photos.filter(p => {
+                const parts = p.date.split('/');
+                return parseInt(parts[0]) === day && parseInt(parts[1]) === month && parseInt(parts[2]) === year;
+            });
+    
+            activeDateFilter = `${year}-${month}-${day}`;
+            document.getElementById('clear-filter-btn').style.display = 'block';
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ccc; padding:20px;">Sin fotos este día</div>';
+            } else {
+                filtered.forEach(photo => {
+                     const div = document.createElement('div');
+                    div.className = 'photo-card';
+                    // ... (crear elemento igual que loadPhotos)
+                    // Copiar lógica de loadPhotos aquí o refactorizar loadPhotos para aceptar array
+                    const imgSrc = (typeof photo === 'string') ? photo : photo.data;
+                    const id = photo.id || Math.random();
+                    div.innerHTML = `
+                        <img src="${imgSrc}" class="photo-thumb" onclick="viewPhoto('${imgSrc}')">
+                        <button class="delete-btn" onclick="deletePhoto(${id})"><i class="fas fa-trash"></i></button>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+            renderCalendar(); // Para actualizar estilo de selección
+        }
+
+        function clearDateFilter() {
+            activeDateFilter = null;
+            document.getElementById('clear-filter-btn').style.display = 'none';
+            loadPhotos(); // Cargar todas
+            renderCalendar();
+        }
+
+        // --- AGENDA / MODAL ---
+        function openScheduleModal(dateKey) {
+            const existing = appData.schedule && appData.schedule[dateKey];
+    
+            // Título
+            const parts = dateKey.split('-');
+            document.getElementById('schedule-date-title').innerText = `Agendar: ${parts[2]}/${parts[1]}/${parts[0]}`;
+    
+            // Cargar datos
+            if (existing) {
+                document.getElementById('schedule-time').value = existing.time;
+                selectColor(null, existing.color); // Función helper
+            } else {
+                document.getElementById('schedule-time').value = '';
+                selectColor(null, '#8c754a'); // Default Gold
+            }
+    
+            document.getElementById('schedule-modal').classList.add('active');
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('schedule-modal').classList.remove('active');
+        }
+
+        function selectColor(el, color) {
+            document.getElementById('selected-color-input').value = color;
+            // UI Update
+            document.querySelectorAll('.color-option').forEach(d => {
+                d.classList.remove('selected');
+                if(d.style.backgroundColor === color || (el && d === el)) d.style.add; // Lógica simplificada color hex
+            });
+            // Buscar el div con ese color y marcarlo
+            // (Simplificación: resetear todos y marcar el que coincida)
+            const options = document.querySelectorAll('.color-option');
+            options.forEach(opt => {
+                // Truco: comparar colores convertidos por navegador puede ser difícil (rgb vs hex).
+                // Usamos el onclick para setear la clase visualmente al momento.
+                opt.classList.remove('selected');
+                // Convertir el background inline a hex es complejo, mejor confiar en el click del usuario
+            });
+            if(el) el.classList.add('selected');
+        }
+
+        function saveSchedule() {
+            const time = document.getElementById('schedule-time').value;
+            const color = document.getElementById('selected-color-input').value;
+    
+            if(!time) { alert("Selecciona una hora"); return; }
+    
+            if(!appData.schedule) appData.schedule = {};
+    
+            appData.schedule[selectedScheduleDate] = {
+                time: time,
+                color: color
+            };
+    
+            saveData();
+            renderCalendar();
+            checkScheduleNotification(); // Actualizar punto rojo
+            closeScheduleModal();
+        }
+
+        function deleteSchedule() {
+            if(appData.schedule && appData.schedule[selectedScheduleDate]) {
+                delete appData.schedule[selectedScheduleDate];
+                saveData();
+                renderCalendar();
+                checkScheduleNotification();
+                closeScheduleModal();
+            }
+        }
+
+        // --- NOTIFICACIÓN (PUNTO ROJO) ---
+        function checkScheduleNotification() {
+            const notif = document.getElementById('calendar-notif');
+            if(!notif) return;
+    
+            const now = new Date();
+            const todayKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+    
+            const eventToday = appData.schedule && appData.schedule[todayKey];
+    
+            if (eventToday) {
+                // Hora actual vs Hora evento
+                const nowMinutes = now.getHours() * 60 + now.getMinutes();
+                const [evtHour, evtMin] = eventToday.time.split(':').map(Number);
+                const evtMinutes = evtHour * 60 + evtMin;
+        
+                // Condición: Es hoy Y estamos ANTES de la hora
+                if (nowMinutes < evtMinutes) {
+                    notif.classList.add('active');
+                } else {
+                    notif.classList.remove('active');
+                }
+            } else {
+                notif.classList.remove('active');
+            }
+        }
+
+        // Registrar el Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => console.log('Service Worker registrado:', reg.scope))
+                    .catch((err) => console.log('Error al registrar SW:', err));
+            });
+        }
+
+    </script>
+</body>
+</html>
