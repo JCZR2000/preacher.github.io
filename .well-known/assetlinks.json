@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "preacher.mizafilms.pwa",
+        "sha256_cert_fingerprints": ["BD:28:F7:47:58:6F:CC:FC:0F:7E:72:57:1A:52:4C:7A:4E:C5:7F:E1:42:3D:F6:B3:66:0F:37:34:32:C4:02:2B"]
+      }
+    }]
