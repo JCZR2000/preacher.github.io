@@ -1,23 +1,57 @@
 {
-  "name": "Preacher",
+  "name": "Preacher 2.0",
   "short_name": "Preacher",
+  "description": "Herramienta de gestión para el ministerio: cronómetro, informes y lectura bíblica.",
+  "id": "/",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ece8e2",
   "theme_color": "#59583b",
   "orientation": "portrait",
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "logo.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "logo.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Vista de Inicio Móvil"
+    },
+    {
+      "src": "screenshot-desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Vista de Escritorio"
     }
   ]
 }
